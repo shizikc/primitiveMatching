@@ -1,6 +1,7 @@
+import logging
+
 import torch
 import torch.nn as nn
-
 
 
 class matchNetLoss(nn.Module):
@@ -43,6 +44,7 @@ class matchNetLoss(nn.Module):
 
         # TODO: add accuracy metrics
         acc = ((probs_pred > 0.5) == prob_target).float().mean()
+
         c_loss = torch.tensor(0.)
         if train_reg:
             # TODO: replace loop
@@ -54,17 +56,28 @@ class matchNetLoss(nn.Module):
                     c_loss += chamfer_distance(diff_pred_i.unsqueeze(0), diff_gt[i].unsqueeze(0))
                     # calculate distance of each point in gt object to pred
                     c_loss += chamfer_distance(diff_pred_i.unsqueeze(0), diff_gt[i].unsqueeze(0))
+        c_loss /= bs
+        total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss
 
-        return self.bce_coeff * pred_loss + self.cd_coeff * c_loss / bs
+        d = {'epoch': self.iter,
+             'total_loss': total_loss,
+             'pred_loss': pred_loss,
+             'c_loss': c_loss,
+             'acc': acc}
+
+        logging.info(
+            "Epoch : %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
+            " c_loss: %(c_loss).3f accuracy : %(acc).4f" % d)
+
+        return total_loss
 
 
-# TODO: change this to receive different number of points per sample
 def chamfer_distance(a, b, method="mean"):
     """
     a: (b, p, 3)
     b: (b, q, 3)
     """
-    diff = a[:, :, None, :] - b[:, None, :, :] # (b, p, q, 3)
+    diff = a[:, :, None, :] - b[:, None, :, :]  # (b, p, q, 3)
     dist = diff.norm(p=2, dim=3)
     d_min, _ = dist.min(2)
     if method == "mean":
