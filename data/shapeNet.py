@@ -115,7 +115,7 @@ class ShapeDiffDataset(Dataset):
         H, edges = create_hist_labels(x_diff, self.bins)
 
         return torch.tensor(x_partial).to(self.dev).float(), torch.tensor(x_diff).to(self.dev).float(),\
-               torch.tensor(H > 0.0).to(self.dev).float()
+               torch.tensor(H > 0.0).flatten().to(self.dev).float()
 
 
 #
