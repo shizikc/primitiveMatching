@@ -42,7 +42,6 @@ class matchNetLoss(nn.Module):
         mask = mask.unsqueeze(2).repeat(1, 1, 3)  # torch.Size([bs, bins^3, 3])
         mask = mask.unsqueeze(2).repeat(1, 1, diff_pred.shape[2], 1)
 
-        # TODO: add accuracy metrics
         acc = ((probs_pred > 0.5) == prob_target).float().mean()
 
         c_loss = torch.tensor(0.)
@@ -65,6 +64,7 @@ class matchNetLoss(nn.Module):
              'c_loss': c_loss,
              'acc': acc}
 
+        # TODO: print at the end of the epoch
         logging.info(
             "Epoch : %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
             " c_loss: %(c_loss).3f accuracy : %(acc).4f" % d)
