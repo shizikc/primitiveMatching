@@ -117,12 +117,14 @@ class ClassificationPointNet(nn.Module):
         x = F.relu(self.bn_2(self.fc_2(x)))
         x = self.dropout_1(x)
 
-        return F.log_softmax(self.fc_3(x), dim=1), feature_transform
+        return F.softmax(self.fc_3(x), dim=1), feature_transform
 
 
 if __name__ == '__main__':
-    sim_data = Variable(torch.rand(32, 2500, 3))
+    sim_data = Variable(torch.rand(2, 2500, 3))
     M = 5
-    pn = ClassificationPointNet(11 * M)
+    pn = ClassificationPointNet(11 * M**3)
     out, _ = pn(sim_data)
+    # z, q, t, p = torch.split_with_sizes(out,
+    #                                     tuple(torch.tensor([3, 4, 3, 1]) * (M**3)), axis=1)
 
