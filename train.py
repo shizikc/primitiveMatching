@@ -3,6 +3,7 @@ import numpy as np
 from torch.utils.data.dataloader import DataLoader
 
 from data.shapeNet import ShapeDiffDataset
+from modules.matchNet import MatchNet
 
 
 def get_data(train_ds, valid_ds, bs):
@@ -44,7 +45,7 @@ def loss_func(args):
 
 
 def get_model():
-    model =
+    model = MatchNet()
     return model, optim.SGD(model.parameters(), lr=lr)
 
 
@@ -54,4 +55,4 @@ if __name__ == '__main__':
 
     train_dl, valid_dl = get_data(train_ds, valid_ds, bs)
     model, opt = get_model()
-    fit(epochs, model, loss_func, opt, train_dl, valid_dl)
+    fit(max_epoch, model, loss_func, opt, train_dl, valid_dl)

@@ -122,8 +122,7 @@ class ClassificationPointNet(nn.Module):
 
 if __name__ == '__main__':
     sim_data = Variable(torch.rand(32, 2500, 3))
-    M = 10
+    M = 5
     pn = ClassificationPointNet(11 * M)
-    out, ft = pn(sim_data)
-
+    out, _ = pn(sim_data)
 
