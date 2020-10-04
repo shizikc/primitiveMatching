@@ -15,14 +15,17 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
 
 dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-## Params
+## Params ##
 bins_per_face = 5
 samples_per_face = 333
 lr = 0.01
 mmnt = 0.9
-train_path = 'C:/Users/sharon/Documents/Research/data/dataset2019/shapenet/train/gt/03001627'
-val_path = 'C:/Users/sharon/Documents/Research/data/dataset2019/shapenet/val/gt/03001627'
-model_path = 'C:/Users/sharon/Documents/Research/ObjectCompletion3D/model/'
+# train_path = 'C:/Users/sharon/Documents/Research/data/dataset2019/shapenet/train/gt/03001627'
+train_path = '/home/coopers/data/train/gt/'
+# val_path = 'C:/Users/sharon/Documents/Research/data/dataset2019/shapenet/val/gt/03001627'
+val_path = '/home/coopers/data/val/gt/'
+# model_path = 'C:/Users/sharon/Documents/Research/ObjectCompletion3D/model/'
+model_path = '/home/coopers/models/'
 batch_size = 2
 max_epoch = 2
 threshold = 0.1
@@ -79,6 +82,7 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
 
             # save minimum model
             torch.save(model.state_dict(), model_path)
+
 
 def get_model():
     model = MatchNet(bins=bins_per_face, samplesPerFace=samples_per_face)
