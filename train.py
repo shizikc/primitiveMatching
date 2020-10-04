@@ -6,6 +6,7 @@ from torch import optim
 from torch.utils.data.dataloader import DataLoader
 
 from data.shapeNet import ShapeDiffDataset
+from modules.configUtils import get_args
 from modules.losses import matchNetLoss
 from modules.matchNet import MatchNet
 
@@ -16,22 +17,22 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
 dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 ## Params ##
-bins_per_face = 5
-samples_per_face = 333
-lr = 0.01
-mmnt = 0.9
-# train_path = 'C:/Users/sharon/Documents/Research/data/dataset2019/shapenet/train/gt/03001627'
-train_path = '/home/coopers/data/train/gt/'
-# val_path = 'C:/Users/sharon/Documents/Research/data/dataset2019/shapenet/val/gt/03001627'
-val_path = '/home/coopers/data/val/gt/'
-# model_path = 'C:/Users/sharon/Documents/Research/ObjectCompletion3D/model/'
-model_path = '/home/coopers/models/'
-batch_size = 2
-max_epoch = 2
-threshold = 0.1
-reg_start_iter = 150
-bce_coeff = 1.
-cd_coeff = 1.
+
+params = get_args()
+
+bins_per_face = params.bins
+samples_per_face = params.samples_per_face
+lr = params.lr
+mmnt = params.momentum
+train_path = params.train_path
+val_path = params.val_path
+model_path = params.model_path
+batch_size = params.batch_size
+max_epoch = params.max_epoch
+threshold = params.threshold
+reg_start_iter = params.reg_start_iter
+bce_coeff = params.bce_coeff
+cd_coeff = params.cd_coeff
 
 
 def get_data(train_ds, valid_ds, bs):
