@@ -2,22 +2,25 @@ import logging
 from argparse import ArgumentParser
 import pandas as pd
 
+
 def get_args():
     parser = ArgumentParser()
     parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
     parser.add_argument('--notes', default='', help='Experiments notes [default: log]')
     parser.add_argument('--model_path',
-                        default='C:/Users/sharon/Documents/Research/ObjectCompletion3D/model/')
-    # default='/home/coopers/models/')
+                        # default='C:/Users/sharon/Documents/Research/ObjectCompletion3D/model/')
+                        default='/home/coopers/models/04530566/')
     parser.add_argument('--train_path',
-                        default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\train\\gt\\')
+                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\train\\gt\\')
+                        default='/home/coopers/data/train/gt/04530566/')
     parser.add_argument('--val_path',
-                        default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\val\\gt\\')
+                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\val\\gt\\')
+                        default='/home/coopers/data/val/gt/04530566/')
     # default='/home/coopers/data/train/gt/')
-    parser.add_argument('--max_epoch', type=int, default=1000, help='Epoch to run [default: 100]')
+    parser.add_argument('--max_epoch', type=int, default=2, help='Epoch to run [default: 100]')
     parser.add_argument('--bins', type=int, default=5, help='resolution of main cube [default: 10]')
     parser.add_argument('--samples_per_face', type=int, default=100, help='number of samples per voxel [default: 20]')
-    parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 1]')
+    parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 1]')
     parser.add_argument('--threshold', default=0.01, help='cube probability threshold')
     parser.add_argument('--lr', default=0.01, help='cube probability threshold')
     parser.add_argument('--momentum', default=0.09, help='cube probability threshold')

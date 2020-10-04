@@ -62,7 +62,7 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
             loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt)
 
         logging.info(
-            "Epoch : %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
+            "Epoch (Train): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
             " c_loss: %(c_loss).3f accuracy : %(acc).4f" % loss_obj.temp_metrics)
 
         model.eval()
@@ -73,7 +73,7 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
             )
         val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
 
-        logging.info("epoch: " + str(epoch) + "val_loss: " + str(val_loss))
+        logging.info("Epoch (Valid): {:3d}, total loss : {:05.4f}".format(epoch, val_loss))
 
         if epoch == reg_start_iter:
             min_loss = val_loss
@@ -86,7 +86,7 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
 
 
 def get_model():
-    model = MatchNet(bins=bins_per_face, samplesPerFace=samples_per_face)
+    model = MatchNet(bins=bins_per_face, samplesPerFace=samples_per_face, dev=dev)
     return model.to(dev), optim.SGD(model.parameters(), lr=lr, momentum=mmnt)
 
 

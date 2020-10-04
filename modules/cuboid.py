@@ -1,5 +1,5 @@
 import torch
-from utils.visualization import plot_pc_mayavi
+# from utils.visualization import plot_pc_mayavi
 
 
 #
@@ -106,5 +106,5 @@ if __name__ == '__main__':
     c = sample_partial_cuboid(batch_size, bins_per_face, samples_per_face)
     import numpy.random as rm
 
-    plot_pc_mayavi([c[0][i] for i in range(ncuboid)],
-                   colors=[tuple(rm.random(3)) for i in range(ncuboid)])
+    # plot_pc_mayavi([c[0][i] for i in range(ncuboid)],
+    #                colors=[tuple(rm.random(3)) for i in range(ncuboid)])

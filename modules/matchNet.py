@@ -6,13 +6,13 @@ from modules.pointnet import ClassificationPointNet
 
 
 class MatchNet(nn.Module):
-    def __init__(self, bins, samplesPerFace):
+    def __init__(self, bins, samplesPerFace, dev):
         super(MatchNet, self).__init__()
         self.bins = bins  # per face partition
         self.encoder = ClassificationPointNet(11 * (self.bins ** 3))
         self.samplesPerFace = samplesPerFace
         # uniformly sampled cuboids in [-1,1], shape torch.Size([1, bins**3, nSamples, 3])
-        self.samples = sample_partial_cuboid(1, self.bins, self.samplesPerFace)
+        self.samples = sample_partial_cuboid(1, self.bins, self.samplesPerFace).to(dev)
 
     def forward(self, x):
         """
