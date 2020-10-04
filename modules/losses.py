@@ -14,6 +14,7 @@ class matchNetLoss(nn.Module):
         self.reg_start_iter = reg_start_iter  # 150
         self.bce_coeff = bce_coeff
         self.cd_coeff = cd_coeff
+        self.temp_metrics = None
 
     def loss_func(self, pred, gt):
         """
@@ -58,16 +59,11 @@ class matchNetLoss(nn.Module):
         c_loss /= bs
         total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss
 
-        d = {'epoch': self.iter,
-             'total_loss': total_loss,
-             'pred_loss': pred_loss,
-             'c_loss': c_loss,
-             'acc': acc}
-
-        # TODO: print at the end of the epoch
-        logging.info(
-            "Epoch : %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
-            " c_loss: %(c_loss).3f accuracy : %(acc).4f" % d)
+        self.temp_metrics = {'epoch': self.iter,
+                             'total_loss': total_loss,
+                             'pred_loss': pred_loss,
+                             'c_loss': c_loss,
+                             'acc': acc}
 
         return total_loss
 
