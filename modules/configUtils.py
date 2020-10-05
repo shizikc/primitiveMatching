@@ -22,7 +22,7 @@ def get_args():
     parser.add_argument('--samples_per_face', type=int, default=100, help='number of samples per voxel [default: 20]')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 1]')
     parser.add_argument('--threshold', default=0.01, help='cube probability threshold')
-    parser.add_argument('--lr', default=0.01, help='cube probability threshold')
+    parser.add_argument('--lr', default=0.1, help='cube probability threshold')
     parser.add_argument('--momentum', default=0.09, help='cube probability threshold')
     parser.add_argument('--cd_coeff', default=1)
     parser.add_argument('--bce_coeff', default=1)
