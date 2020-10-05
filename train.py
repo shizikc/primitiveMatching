@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 import torch
 import numpy as np
@@ -19,6 +20,7 @@ dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 ## Params ##
 
 params = get_args()
+run_id = "{:%m%d_%H%M}".format(datetime.now())
 
 bins_per_face = params.bins
 samples_per_face = params.samples_per_face
@@ -26,7 +28,7 @@ lr = params.lr
 mmnt = params.momentum
 train_path = params.train_path
 val_path = params.val_path
-model_path = params.model_path
+model_path = params.model_path + "model_" + str(run_id) + ".pt"
 batch_size = params.batch_size
 max_epoch = params.max_epoch
 threshold = params.threshold
