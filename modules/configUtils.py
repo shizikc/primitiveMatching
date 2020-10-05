@@ -9,7 +9,7 @@ def get_args():
     parser.add_argument('--notes', default='', help='Experiments notes [default: log]')
     parser.add_argument('--model_path',
                         # default='C:/Users/sharon/Documents/Research/ObjectCompletion3D/model/')
-                        default='/home/coopers/models/04530566/')
+                        default='/home/coopers/models/')
     parser.add_argument('--train_path',
                         # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\train\\gt\\')
                         default='/home/coopers/data/train/gt/04530566/')
