@@ -1,5 +1,5 @@
 import torch
-from utils.visualization import plot_pc_mayavi
+# from utils.visualization import plot_pc_mayavi
 
 
 #
@@ -49,6 +49,7 @@ from utils.visualization import plot_pc_mayavi
 #
 #     surfArea = (wh + hd + wd)
 #     return torch.tensor([hd, wd, wh]) / surfArea  # .repeat(1, self.nSamples, 1)
+from utils.visualization import plot_pc_mayavi
 
 
 def sample_cudoid(bs, nCuboid, nSamplePerFace):
@@ -97,16 +98,54 @@ def sample_partial_cuboid(bs, bins, nSamplePerFace):
     b = b.unsqueeze(0).repeat(bs, 1, 1)  # bs x bins**3 x 3
     return a * (1 / bins) + b.unsqueeze(2)
 
-def rotate_cuboid():
-    pass
+
+def rotate_cuboid(quats):
+    """
+
+    :param quats: in (bs, nCubiods, 4) assumes normelized vector
+    :return: (bs, nCubiods, 3, 3)
+    """
+    a = quats[:, :, 0]  # bs x nCubiods
+    b = quats[:, :, 1]
+    c = quats[:, :, 2]
+    d = quats[:, :, 3]
+    q2 = torch.square(quats)
+    a2 = q2[:, :, 0]  # bs x nCubiods
+    b2 = q2[:, :, 1]
+    c2 = q2[:, :, 2]
+    d2 = q2[:, :, 3]
+    ab = a * b  # bs x nCubiods
+    ac = a * c
+    ad = a * d
+    bc = b * c
+    bd = b * d
+    cd = c * d
+
+    rot_flat = torch.stack([
+        a2 + b2 - c2 - d2, 2 * (bc - ad), 2 * (bd + ac),
+        2 * (bc + ad), a2 + c2 - b2 - d2, 2 * (cd - ab),
+        2 * (bd - ac), 2 * (cd + ab), a2 + d2 - b2 - c2], dim=2)  # bs x nCubiods x 9
+
+    return rot_flat.reshape(quats.shape[0], quats.shape[1], 3, 3)
+
 
 if __name__ == '__main__':
     batch_size = 2
-    bins_per_face = 2
+    bins_per_face = 4
     samples_per_face = 333
     ncuboid = bins_per_face ** 3
-    c = sample_partial_cuboid(batch_size, bins_per_face, samples_per_face)
+
+    a = sample_cudoid(batch_size, bins_per_face ** 3, samples_per_face)
+    # rotate a
+
+    # move to corners
+    b = get_cuboid_corner(bins_per_face)  # bins**3 x 3
+    b = b.unsqueeze(0).repeat(batch_size, 1, 1)  # bs x bins**3 x 3
+    c = a * (1 / bins_per_face) + b.unsqueeze(2)
+
+    # c = sample_partial_cuboid(batch_size, bins_per_face, samples_per_face)
+
     import numpy.random as rm
 
-    plot_pc_mayavi([c[0][i] for i in range(ncuboid)],
-                   colors=[tuple(rm.random(3)) for i in range(ncuboid)])
+    # plot_pc_mayavi([c[0][i] for i in range(ncuboid)],
+    #                colors=[tuple(rm.random(3)) for i in range(ncuboid)])
