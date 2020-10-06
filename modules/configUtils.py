@@ -16,15 +16,16 @@ def get_args():
     parser.add_argument('--val_path',
                         # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\val\\gt\\')
                         default='/home/coopers/data/val/gt/04530566/')
-    # default='/home/coopers/data/train/gt/')
     parser.add_argument('--max_epoch', type=int, default=2, help='Epoch to run [default: 100]')
     parser.add_argument('--bins', type=int, default=5, help='resolution of main cube [default: 10]')
     parser.add_argument('--samples_per_face', type=int, default=100, help='number of samples per voxel [default: 20]')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 1]')
     parser.add_argument('--threshold', default=0.01, help='cube probability threshold')
+    parser.add_argument('--optimizer', default="adam", help='should be either adam or SGD [default: adam]')
     parser.add_argument('--lr', default=0.1, help='cube probability threshold')
     parser.add_argument('--momentum', default=0.09, help='cube probability threshold')
     parser.add_argument('--cd_coeff', default=1)
+    parser.add_argument('--bce_coeff', default=1)
     parser.add_argument('--bce_coeff', default=1)
     parser.add_argument('--reg_start_iter', type=int, default=150)
 

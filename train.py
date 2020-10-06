@@ -23,6 +23,7 @@ params = get_args()
 run_id = "{:%m%d_%H%M}".format(datetime.now())
 
 bins_per_face = params.bins
+optimizer = params.optimizer
 samples_per_face = params.samples_per_face
 lr = params.lr
 mmnt = params.momentum
@@ -89,7 +90,11 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
 
 def get_model():
     model = MatchNet(bins=bins_per_face, samplesPerFace=samples_per_face, dev=dev)
-    return model.to(dev), optim.SGD(model.parameters(), lr=lr, momentum=mmnt)
+    if optimizer == "adam":
+        opt = optim.Adam(model.parameters(), lr=lr)
+    else:
+        opt = optim.SGD(model.parameters(), lr=lr, momentum=mmnt)
+    return model.to(dev), opt
 
 
 if __name__ == '__main__':
