@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 import numbers
 
 # from utils.visualization import plot_pc_mayavi
-from utils.visualization import plot_pc_mayavi
+# from utils.visualization import plot_pc_mayavi
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -131,4 +131,4 @@ if __name__ == '__main__':
                                 seed=42
                                 )
     x_partial, x_diff, hist = shapenet[0]
-    plot_pc_mayavi([x_partial, x_diff], colors=((1., 1., 1.), (1., 0., 0.)))
+    # plot_pc_mayavi([x_partial, x_diff], colors=((1., 1., 1.), (1., 0., 0.)))

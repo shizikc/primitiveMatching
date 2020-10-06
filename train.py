@@ -99,8 +99,8 @@ update_tracking(run_id, "cd_coeff", params.cd_coeff)
 
 
 if __name__ == '__main__':
-    train_ds = ShapeDiffDataset(params.train_path, params.bins_per_face, dev)
-    valid_ds = ShapeDiffDataset(params.val_path, params.bins_per_face, dev)
+    train_ds = ShapeDiffDataset(params.train_path, params.bins, dev)
+    valid_ds = ShapeDiffDataset(params.val_path, params.bins, dev)
 
     train_dl, valid_dl = get_data(train_ds, valid_ds, params.batch_size)
 

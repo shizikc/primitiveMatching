@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-# from utils.visualization import plot_pc_mayavi
+
 
 #
 # def cuboidAreaModule(self, dims):
@@ -65,8 +65,6 @@ import torch.nn.functional as F
 #     return a * (1 / bins) + b.unsqueeze(2)
 
 
-
-
 def sample_cudoid(bs, nCuboid, nSamplePerFace):
     """
 
@@ -98,9 +96,6 @@ def get_cuboid_corner(dim=5):
     ticks = torch.arange(-1, 1, 2 / dim)
     xs, ys, zs = torch.meshgrid(*([ticks] * 3))
     return torch.stack([xs, ys, zs], -1).view(-1, 3)
-
-
-
 
 
 def rotate_cuboid(quats):
@@ -148,14 +143,16 @@ if __name__ == '__main__':
     # rotate a by k
 
     k = F.normalize(k, p=2, dim=2)
-    k = rotate_cuboid(k) # (bs, nCubiods, 3, 3)
+    k = rotate_cuboid(k)  # (bs, nCubiods, 3, 3)
     k = k.unsqueeze(2)
 
     # rotate by k
     a2 = a.unsqueeze(4)
     a2 = torch.matmul(k, a2).squeeze(4)
 
-    plot_pc_mayavi([a[0][0], a2[0][0]], colors=[tuple(rm.random(3)) for i in range(2)])
+    from utils.visualization import plot_pc_mayavi
+
+    plot_pc_mayavi([a2[0][0]], colors=[tuple(rm.random(3)) for i in range(2)])
 
     # move a to cuboids grid corners
     b = get_cuboid_corner(bins_per_face)  # bins**3 x 3
@@ -164,3 +161,4 @@ if __name__ == '__main__':
 
     # plot_pc_mayavi([c[0][i] for i in range(ncuboid)],
     #                colors=[tuple(rm.random(3)) for i in range(ncuboid)])
+    plot_pc_mayavi([c[0][0]], colors=[tuple(rm.random(3)) for i in range(2)])

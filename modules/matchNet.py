@@ -30,17 +30,15 @@ class MatchNet(nn.Module):
                                             tuple(torch.tensor([3, 4, 3, 1]) * (self.bins ** 3)), axis=1)
 
         z = z.reshape(bs, -1, 3).unsqueeze(2).repeat(1, 1, 3 * self.samplesPerFace,
-                                                     1) * 0.5  # bs x bins^3 x nSaples x 3
+                                                     1)  # bs x bins^3 x nSaples x 3
         t = t.reshape(bs, -1, 3).unsqueeze(2).repeat(1, 1, 3 * self.samplesPerFace,
-                                                     1) * 0.5  # bs x bins^3 x nSaples x 3
+                                                     1)  # bs x bins^3 x nSaples x 3
         q = q.reshape(bs, -1, 4)
-        # factor samples by z
-        out = samples * z
 
         # rotate by q
         q = F.normalize(q, p=2, dim=2)
         q = rotate_cuboid(q).unsqueeze(2)  # (bs, nCubiods, 3, 3)
-        out = out.unsqueeze(4)
+        out = samples.unsqueeze(4)
         out = torch.matmul(q, out).squeeze(4)
 
         # move to voxels
@@ -48,16 +46,16 @@ class MatchNet(nn.Module):
         b = b.unsqueeze(0).repeat(bs, 1, 1)  # bs x bins**3 x 3
         out = out * (1 / self.bins) + b.unsqueeze(2)
 
-        # translate by t
-        out += t
+        # translate by t, scale by z
+        out = out * z + t
         return out, p, z
 
 
 if __name__ == '__main__':
     batch_size = 2
-    bins_per_face = 5
+    bins_per_face = 2
     ncuboid = bins_per_face ** 3
-    samples_per_face = 333
+    samples_per_face = 15
     sim_data = torch.rand(batch_size, 1792, 3)
 
     mn = MatchNet(bins_per_face, samples_per_face, "cpu")
@@ -69,4 +67,4 @@ if __name__ == '__main__':
     c = [tuple(rm.random(3)) for i in range(ncuboid)]
     # plot_pc_mayavi([mn.samples[0][i] for i in range(ncuboid)], colors=c)
 
-    # plot_pc_mayavi([o.detach().numpy()[0][i] for i in range(ncuboid)], colors=c)
+    # plot_pc_mayavi([o[0][i].detach().numpy() for i in range(ncuboid)], colors=c)

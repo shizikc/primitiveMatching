@@ -26,7 +26,6 @@ def get_args():
     parser.add_argument('--momentum', default=0.09, help='cube probability threshold')
     parser.add_argument('--cd_coeff', default=1)
     parser.add_argument('--bce_coeff', default=1)
-    parser.add_argument('--bce_coeff', default=1)
     parser.add_argument('--reg_start_iter', type=int, default=150)
 
     return parser.parse_args()
