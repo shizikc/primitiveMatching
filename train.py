@@ -75,7 +75,7 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
 
 
 def get_model():
-    model = MatchNet(bins=params.bins_per_face, samplesPerFace=params.samples_per_face, dev=dev)
+    model = MatchNet(bins=params.bins, samplesPerFace=params.samples_per_face, dev=dev)
     if params.optimizer == "adam":
         opt = optim.Adam(model.parameters(), lr=params.lr)
     else:
