@@ -1,6 +1,6 @@
 import torch
+import torch.nn.functional as F
 # from utils.visualization import plot_pc_mayavi
-
 
 #
 # def cuboidAreaModule(self, dims):
@@ -49,7 +49,22 @@ import torch
 #
 #     surfArea = (wh + hd + wd)
 #     return torch.tensor([hd, wd, wh]) / surfArea  # .repeat(1, self.nSamples, 1)
-from utils.visualization import plot_pc_mayavi
+
+
+# def sample_partial_cuboid(bs, bins, nSamplePerFace):
+#     """
+#
+#     :param bs:
+#     :param bins:
+#     :param nSamplePerFace:
+#     :return:
+#     """
+#     a = sample_cudoid(bs, bins ** 3, nSamplePerFace)  # bs x bins**3 x 3 * nSamplePerFace x 3
+#     b = get_cuboid_corner(bins)  # bins**3 x 3
+#     b = b.unsqueeze(0).repeat(bs, 1, 1)  # bs x bins**3 x 3
+#     return a * (1 / bins) + b.unsqueeze(2)
+
+
 
 
 def sample_cudoid(bs, nCuboid, nSamplePerFace):
@@ -85,18 +100,7 @@ def get_cuboid_corner(dim=5):
     return torch.stack([xs, ys, zs], -1).view(-1, 3)
 
 
-def sample_partial_cuboid(bs, bins, nSamplePerFace):
-    """
 
-    :param bs:
-    :param bins:
-    :param nSamplePerFace:
-    :return:
-    """
-    a = sample_cudoid(bs, bins ** 3, nSamplePerFace)  # bs x bins**3 x 3 * nSamplePerFace x 3
-    b = get_cuboid_corner(bins)  # bins**3 x 3
-    b = b.unsqueeze(0).repeat(bs, 1, 1)  # bs x bins**3 x 3
-    return a * (1 / bins) + b.unsqueeze(2)
 
 
 def rotate_cuboid(quats):
@@ -130,22 +134,33 @@ def rotate_cuboid(quats):
 
 
 if __name__ == '__main__':
+    import numpy.random as rm
+
     batch_size = 2
-    bins_per_face = 4
+    bins_per_face = 1
     samples_per_face = 333
     ncuboid = bins_per_face ** 3
 
     a = sample_cudoid(batch_size, bins_per_face ** 3, samples_per_face)
-    # rotate a
 
-    # move to corners
+    k = torch.rand(batch_size, ncuboid, 4)
+
+    # rotate a by k
+
+    k = F.normalize(k, p=2, dim=2)
+    k = rotate_cuboid(k) # (bs, nCubiods, 3, 3)
+    k = k.unsqueeze(2)
+
+    # rotate by k
+    a2 = a.unsqueeze(4)
+    a2 = torch.matmul(k, a2).squeeze(4)
+
+    plot_pc_mayavi([a[0][0], a2[0][0]], colors=[tuple(rm.random(3)) for i in range(2)])
+
+    # move a to cuboids grid corners
     b = get_cuboid_corner(bins_per_face)  # bins**3 x 3
     b = b.unsqueeze(0).repeat(batch_size, 1, 1)  # bs x bins**3 x 3
     c = a * (1 / bins_per_face) + b.unsqueeze(2)
-
-    # c = sample_partial_cuboid(batch_size, bins_per_face, samples_per_face)
-
-    import numpy.random as rm
 
     # plot_pc_mayavi([c[0][i] for i in range(ncuboid)],
     #                colors=[tuple(rm.random(3)) for i in range(ncuboid)])
