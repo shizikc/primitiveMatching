@@ -52,7 +52,7 @@ class matchNetLoss(nn.Module):
                 diff_pred_i = diff_pred[i][mask[i]].reshape(-1, 3)  # nPoints predicted x 3
                 # any points detected
                 if diff_pred_i.shape[0] > 0:
-                    CD += symetric_chamfer_distance(diff_pred_i.unsqueeze(0), diff_gt[i].unsqueeze(0))
+                    CD += symmetric_chamfer_distance(diff_pred_i.unsqueeze(0), diff_gt[i].unsqueeze(0))
             c_loss = CD / bs
         else:
             c_loss = torch.tensor(0.)
@@ -67,10 +67,11 @@ class matchNetLoss(nn.Module):
         return total_loss
 
 
-def symetric_chamfer_distance(a, b, method="mean"):
+def symmetric_chamfer_distance(a, b, method="mean"):
     CD1 = chamfer_distance(a, b, method)
     CD2 = chamfer_distance(b, a, method)
     return torch.max(CD1, CD2)
+
 
 def chamfer_distance(a, b, method="mean"):
     """
