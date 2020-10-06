@@ -83,22 +83,21 @@ def get_model():
     return model.to(dev), opt
 
 
-update_tracking(run_id, "optimizer", params.optimizer)
-update_tracking(run_id, "bins", params.bins)
-update_tracking(run_id, "samples_per_face", params.samples_per_face)
-update_tracking(run_id, "lr", params.lr)
-update_tracking(run_id, "momentum", params.momentum)
-update_tracking(run_id, "train_path", params.train_path)
-update_tracking(run_id, "val_path", params.val_path)
-update_tracking(run_id, "batch_size", params.batch_size)
-update_tracking(run_id, "max_epoch", params.max_epoch)
-update_tracking(run_id, "threshold", params.threshold)
-update_tracking(run_id, "reg_start_iter", params.reg_start_iter)
-update_tracking(run_id, "bce_coeff", params.bce_coeff)
-update_tracking(run_id, "cd_coeff", params.cd_coeff)
-
-
 if __name__ == '__main__':
+    update_tracking(run_id, "optimizer", params.optimizer)
+    update_tracking(run_id, "bins", params.bins)
+    update_tracking(run_id, "samples_per_face", params.samples_per_face)
+    update_tracking(run_id, "lr", params.lr)
+    update_tracking(run_id, "momentum", params.momentum)
+    update_tracking(run_id, "train_path", params.train_path)
+    update_tracking(run_id, "val_path", params.val_path)
+    update_tracking(run_id, "batch_size", params.batch_size)
+    update_tracking(run_id, "max_epoch", params.max_epoch)
+    update_tracking(run_id, "threshold", params.threshold)
+    update_tracking(run_id, "reg_start_iter", params.reg_start_iter)
+    update_tracking(run_id, "bce_coeff", params.bce_coeff)
+    update_tracking(run_id, "cd_coeff", params.cd_coeff)
+
     train_ds = ShapeDiffDataset(params.train_path, params.bins, dev)
     valid_ds = ShapeDiffDataset(params.val_path, params.bins, dev)
 
