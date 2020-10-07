@@ -42,7 +42,7 @@ class MatchNet(nn.Module):
         out = torch.matmul(q, out).squeeze(4)
 
         # move to voxels
-        b = get_cuboid_corner(self.bins)  # bins**3 x 3
+        b = get_cuboid_corner(self.bins).to(self.dev)  # bins**3 x 3
         b = b.unsqueeze(0).repeat(bs, 1, 1)  # bs x bins**3 x 3
         out = out * (1 / self.bins) + b.unsqueeze(2)
 
