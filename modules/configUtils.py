@@ -16,7 +16,7 @@ def get_args():
     parser.add_argument('--val_path',
                         # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\val\\gt\\')
                         default='/home/coopers/data/val/gt/04530566/')
-    parser.add_argument('--max_epoch', type=int, default=2000, help='Epoch to run [default: 100]')
+    parser.add_argument('--max_epoch', type=int, default=1000, help='Epoch to run [default: 100]')
     parser.add_argument('--bins', type=int, default=5, help='resolution of main cube [default: 10]')
     parser.add_argument('--samples_per_face', type=int, default=100, help='number of samples per voxel [default: 20]')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 1]')

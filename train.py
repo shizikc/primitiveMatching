@@ -68,7 +68,7 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
         if epoch == params.reg_start_iter:
             min_loss = loss_obj.metrics['total_loss']
 
-        if epoch >= params.reg_start_iter and loss_obj.temp_metrics['total_loss'] <= min_loss:
+        if epoch >= params.reg_start_iter and loss_obj.metrics['total_loss'] <= min_loss:
             min_loss = loss_obj.metrics['total_loss']
 
             # save minimum model
@@ -109,7 +109,6 @@ if __name__ == '__main__':
                           bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff)
     fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl)
 
-    m = MNLoss.metrics.to("cpu")
-    update_tracking(run_id, "total_loss", m["total_loss"])
-    update_tracking(run_id, "pred_loss", m["pred_loss"])
-    update_tracking(run_id, "c_loss", m["c_loss"])
+    update_tracking(run_id, "total_loss", MNLoss.metrics["total_loss"].cpu().detach().numpy())
+    update_tracking(run_id, "pred_loss", MNLoss.metrics["pred_loss"].cpu().detach().numpy())
+    update_tracking(run_id, "c_loss", MNLoss.metrics["c_loss"].cpu().detach().numpy())
