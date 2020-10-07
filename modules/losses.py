@@ -14,7 +14,7 @@ class matchNetLoss(nn.Module):
         self.reg_start_iter = reg_start_iter  # 150
         self.bce_coeff = bce_coeff
         self.cd_coeff = cd_coeff
-        self.temp_metrics = None
+        self.metrics = None
 
     def loss_func(self, pred, gt):
         """
@@ -58,7 +58,7 @@ class matchNetLoss(nn.Module):
             c_loss = torch.tensor(0.)
         total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss
 
-        self.temp_metrics = {'epoch': self.iter,
+        self.metrics = {'epoch': self.iter,
                              'total_loss': total_loss,
                              'pred_loss': pred_loss,
                              'c_loss': c_loss,

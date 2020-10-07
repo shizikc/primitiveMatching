@@ -43,16 +43,17 @@ def loss_batch(model, loss_func, xb, yb, opt=None):
 
 
 def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
+    x_part, diff_gt, p_gt = next(iter(train_dl))
     for epoch in range(epochs):
         loss_obj.iter = epoch
         model.train()
 
-        for x_part, diff_gt, p_gt in train_dl:
-            loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt)
+        # for x_part, diff_gt, p_gt in train_dl:
+        loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt)
 
         logging.info(
             "Epoch (Train): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
-            " c_loss: %(c_loss).3f accuracy : %(acc).4f" % loss_obj.temp_metrics)
+            " c_loss: %(c_loss).3f accuracy : %(acc).4f" % loss_obj.metrics)
 
         # model.eval()
         # with torch.no_grad():
@@ -65,10 +66,10 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
         # logging.info("Epoch (Valid): {:3d}, total loss : {:05.4f}".format(epoch, val_loss))
         # TODO: when turning validation - replace minimum loss with val_loss
         if epoch == params.reg_start_iter:
-            min_loss = loss_obj.temp_metrics['total_loss']
+            min_loss = loss_obj.metrics['total_loss']
 
         if epoch >= params.reg_start_iter and loss_obj.temp_metrics['total_loss'] <= min_loss:
-            min_loss = loss_obj.temp_metrics['total_loss']
+            min_loss = loss_obj.metrics['total_loss']
 
             # save minimum model
             torch.save(model.state_dict(), params.model_path + "model_" + str(run_id) + ".pt")
@@ -79,7 +80,7 @@ def get_model():
     if params.optimizer == "adam":
         opt = optim.Adam(model.parameters(), lr=params.lr)
     else:
-        opt = optim.SGD(model.parameters(), lr=params.lr, momentum=params.mmnt)
+        opt = optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
     return model.to(dev), opt
 
 
@@ -107,3 +108,6 @@ if __name__ == '__main__':
     MNLoss = matchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
                           bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff)
     fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl)
+    update_tracking(run_id, "total_loss", MNLoss.metrics["total_loss"])
+    update_tracking(run_id, "pred_loss", MNLoss.metrics["pred_loss"])
+    update_tracking(run_id, "c_loss", MNLoss.metrics["c_loss"])
