@@ -108,6 +108,8 @@ if __name__ == '__main__':
     MNLoss = matchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
                           bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff)
     fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl)
-    update_tracking(run_id, "total_loss", MNLoss.metrics["total_loss"])
-    update_tracking(run_id, "pred_loss", MNLoss.metrics["pred_loss"])
-    update_tracking(run_id, "c_loss", MNLoss.metrics["c_loss"])
+
+    m = MNLoss.metrics.to("cpu")
+    update_tracking(run_id, "total_loss", m["total_loss"])
+    update_tracking(run_id, "pred_loss", m["pred_loss"])
+    update_tracking(run_id, "c_loss", m["c_loss"])
