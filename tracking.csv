@@ -1,3 +1,0 @@
-,optimizer,bins,samples_per_face,lr,momentum,train_path,val_path,batch_size,max_epoch,threshold,reg_start_iter,bce_coeff,cd_coeff
-1006_2034,adam,5.0,100.0,0.1,0.09,/home/coopers/data/train/gt/04530566/,/home/coopers/data/val/gt/04530566/,32.0,2.0,0.01,150.0,1.0,1.0
-1006_2038,adam,5.0,100.0,0.1,0.09,/home/coopers/data/train/gt/04530566/,/home/coopers/data/val/gt/04530566/,32.0,2.0,0.01,150.0,1.0,1.0
