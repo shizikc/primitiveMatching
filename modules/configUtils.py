@@ -5,28 +5,28 @@ import pandas as pd
 
 def get_args():
     parser = ArgumentParser()
-    parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
-    parser.add_argument('--notes', default='', help='Experiments notes [default: log]')
+    parser.add_argument('--log_dir', default='/home/coopers/log', help='Log dir [default: ]')
+    parser.add_argument('--notes', default='', help='Experiments notes [default: None]')
     parser.add_argument('--model_path',
                         # default='C:/Users/sharon/Documents/Research/ObjectCompletion3D/model/')
                         default='/home/coopers/models/')
     parser.add_argument('--train_path',
-                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\train\\gt\\')
+                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\train\\gt\\04530566\\')
                         default='/home/coopers/data/train/gt/04530566/')
     parser.add_argument('--val_path',
-                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\val\\gt\\')
+                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\val\\gt\\04530566\\')
                         default='/home/coopers/data/val/gt/04530566/')
-    parser.add_argument('--max_epoch', type=int, default=1000, help='Epoch to run [default: 100]')
+    parser.add_argument('--max_epoch', type=int, default=3000, help='Epoch to run [default: 100]')
     parser.add_argument('--bins', type=int, default=5, help='resolution of main cube [default: 10]')
     parser.add_argument('--samples_per_face', type=int, default=100, help='number of samples per voxel [default: 20]')
-    parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 1]')
-    parser.add_argument('--threshold', default=0.1, help='cube probability threshold')
+    parser.add_argument('--batch_size', type=int, default=4, help='Batch Size during training [default: 1]')
+    parser.add_argument('--threshold', default=0.01, help='cube probability threshold')
     parser.add_argument('--optimizer', default="adam", help='should be either adam or SGD [default: adam]')
-    parser.add_argument('--lr', default=0.1, type=float, help='cube probability threshold')
+    parser.add_argument('--lr', default=0.01, type=float, help='cube probability threshold')
     parser.add_argument('--momentum', default=0.09, type=float, help='cube probability threshold')
     parser.add_argument('--cd_coeff', type=float, default=1.)
     parser.add_argument('--bce_coeff', type=float, default=1)
-    parser.add_argument('--reg_start_iter', type=int, default=1000)
+    parser.add_argument('--reg_start_iter', type=int, default=10000)
 
     return parser.parse_args()
 

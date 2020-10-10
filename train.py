@@ -1,27 +1,28 @@
 import logging
 from datetime import datetime
-
 import torch
 import numpy as np
 from torch import optim
 from torch.utils.data.dataloader import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 from data.shapeNet import ShapeDiffDataset
 from modules.configUtils import get_args, update_tracking
-from modules.losses import matchNetLoss
+from modules.losses import MatchNetLoss
 from modules.matchNet import MatchNet
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                     level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
 
+## Params ##
 dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 run_id = "{:%m%d_%H%M}".format(datetime.now())
 
-## Params ##
-
 params = get_args()
+
+writer = SummaryWriter(params.log_dir)
 
 
 def get_data(train_ds, valid_ds, bs):
@@ -31,6 +32,7 @@ def get_data(train_ds, valid_ds, bs):
     )
 
 
+# loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt)
 def loss_batch(model, loss_func, xb, yb, opt=None):
     loss = loss_func(model(xb), yb)
 
@@ -53,17 +55,20 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
 
         logging.info(
             "Epoch (Train): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
-            " c_loss: %(c_loss).3f accuracy : %(acc).4f" % loss_obj.metrics)
+            " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
 
-        # model.eval()
-        # with torch.no_grad():
-        #     losses, nums = zip(
-        #         *[loss_batch(model, loss_obj.loss_func, x_part,
-        #                      (diff_gt, p_gt)) for x_part, diff_gt, p_gt in valid_dl]
-        #     )
-        # val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
-        #
-        # logging.info("Epoch (Valid): {:3d}, total loss : {:05.4f}".format(epoch, val_loss))
+        writer.add_scalar("Loss  (Train)", loss_obj.metrics["total_loss"], epoch)
+
+        model.eval()
+        with torch.no_grad():
+            losses, nums = zip(
+                *[loss_batch(model, loss_obj.loss_func, x_part,
+                             (diff_gt, p_gt)) for x_part, diff_gt, p_gt in valid_dl]
+            )
+        val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
+
+        logging.info("Epoch (Valid): {:3d}, total loss : {:05.4f}".format(epoch, val_loss))
+        writer.add_scalar("Loss  (Valdation)", loss_obj.metrics["total_loss"], epoch)
         # TODO: when turning validation - replace minimum loss with val_loss
         if epoch == params.reg_start_iter:
             min_loss = loss_obj.metrics['total_loss']
@@ -105,9 +110,12 @@ if __name__ == '__main__':
     train_dl, valid_dl = get_data(train_ds, valid_ds, params.batch_size)
 
     model, opt = get_model()
-    MNLoss = matchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
+    MNLoss = MatchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
                           bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff)
     fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl)
+
+    # writer.flush()
+    writer.close()
 
     update_tracking(run_id, "total_loss", MNLoss.metrics["total_loss"].cpu().detach().numpy())
     update_tracking(run_id, "pred_loss", MNLoss.metrics["pred_loss"].cpu().detach().numpy())

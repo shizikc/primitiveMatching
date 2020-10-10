@@ -100,7 +100,7 @@ def get_cuboid_corner(dim=5):
 
 def rotate_cuboid(quats):
     """
-
+    using https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula
     :param quats: in (bs, nCubiods, 4) assumes normelized vector
     :return: (bs, nCubiods, 3, 3)
     """

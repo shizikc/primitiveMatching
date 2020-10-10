@@ -1,13 +1,11 @@
-import logging
-
 import torch
 import torch.nn as nn
 
 
-class matchNetLoss(nn.Module):
+class MatchNetLoss(nn.Module):
     def __init__(self, threshold=0.01, iter=0, reg_start_iter=150,
                  bce_coeff=1., cd_coeff=1.):
-        super(matchNetLoss, self).__init__()
+        super(MatchNetLoss, self).__init__()
         self.bce_loss = nn.BCELoss(reduction='mean')
         self.threshold = threshold  # 0.01
         self.iter = iter  # 150  # train cd from first iteration
@@ -16,6 +14,7 @@ class matchNetLoss(nn.Module):
         self.cd_coeff = cd_coeff
         self.metrics = None
 
+    # (diff_gt, p_gt)
     def loss_func(self, pred, gt):
         """
 
@@ -39,11 +38,14 @@ class matchNetLoss(nn.Module):
         train_reg = self.iter >= self.reg_start_iter
 
         pred_loss = self.bce_loss(probs_pred, prob_target)
+
         mask = probs_pred > self.threshold
+
+        acc = (mask == prob_target).float().mean()
+        fn = ((mask != prob_target).float() * (prob_target == 1).float()).mean()
+
         mask = mask.unsqueeze(2).repeat(1, 1, 3)  # torch.Size([bs, bins^3, 3])
         mask = mask.unsqueeze(2).repeat(1, 1, diff_pred.shape[2], 1)
-
-        acc = ((probs_pred > 0.5) == prob_target).float().mean()
 
         if train_reg:
             # TODO: replace loop
@@ -59,10 +61,11 @@ class matchNetLoss(nn.Module):
         total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss
 
         self.metrics = {'epoch': self.iter,
-                             'total_loss': total_loss,
-                             'pred_loss': pred_loss,
-                             'c_loss': c_loss,
-                             'acc': acc}
+                        'total_loss': total_loss,
+                        'pred_loss': pred_loss,
+                        'c_loss': c_loss,
+                        'acc': acc,
+                        "fn": fn}
 
         return total_loss
 
