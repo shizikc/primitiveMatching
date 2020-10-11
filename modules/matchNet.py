@@ -22,6 +22,7 @@ class MatchNet(nn.Module):
         :return:
         """
         bs = x.shape[0]
+
         # uniformly sampled cuboids in [-1,1], shape torch.Size([bs, bins**3, nSamples, 3])
         samples = self.samples.repeat(bs, 1, 1, 1)
 

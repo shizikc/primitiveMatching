@@ -27,8 +27,8 @@ writer = SummaryWriter(params.log_dir)
 
 def get_data(train_ds, valid_ds, bs):
     return (
-        DataLoader(train_ds, batch_size=bs, shuffle=True),
-        DataLoader(valid_ds, batch_size=bs * 2),
+        DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True),
+        DataLoader(valid_ds, batch_size=bs * 2, drop_last=True),
     )
 
 
@@ -47,8 +47,8 @@ def loss_batch(model, loss_func, xb, yb, opt=None):
 def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
     for epoch in range(epochs):
         loss_obj.iter = epoch
-        model.train()
 
+        model.train()
         for x_part, diff_gt, p_gt in train_dl:
             loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt)
 
