@@ -45,13 +45,13 @@ def loss_batch(model, loss_func, xb, yb, opt=None):
 
 
 def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
-    x_part, diff_gt, p_gt = next(iter(train_dl))
+    # x_part, diff_gt, p_gt = next(iter(train_dl))
     for epoch in range(epochs):
         loss_obj.iter = epoch
         model.train()
 
-        # for x_part, diff_gt, p_gt in train_dl:
-        loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt)
+        for x_part, diff_gt, p_gt in train_dl:
+            loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt)
 
         logging.info(
             "Epoch (Train): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
@@ -65,10 +65,13 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
                 *[loss_batch(model, loss_obj.loss_func, x_part,
                              (diff_gt, p_gt)) for x_part, diff_gt, p_gt in valid_dl]
             )
+
         val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
 
         logging.info("Epoch (Valid): {:3d}, total loss : {:05.4f}".format(epoch, val_loss))
-        writer.add_scalar("Loss  (Valdation)", loss_obj.metrics["total_loss"], epoch)
+
+        writer.add_scalar("Loss  (Valdation)", val_loss, epoch)
+
         # TODO: when turning validation - replace minimum loss with val_loss
         if epoch == params.reg_start_iter:
             min_loss = loss_obj.metrics['total_loss']
