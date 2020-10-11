@@ -45,7 +45,6 @@ def loss_batch(model, loss_func, xb, yb, opt=None):
 
 
 def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
-    # x_part, diff_gt, p_gt = next(iter(train_dl))
     for epoch in range(epochs):
         loss_obj.iter = epoch
         model.train()
@@ -57,7 +56,7 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
             "Epoch (Train): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
             " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
 
-        writer.add_scalar("Loss  (Train)", loss_obj.metrics["total_loss"], epoch)
+        writer.add_scalar("Loss (Train)", loss_obj.metrics["total_loss"], epoch)
 
         model.eval()
         with torch.no_grad():
@@ -70,13 +69,13 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
 
         logging.info("Epoch (Valid): {:3d}, total loss : {:05.4f}".format(epoch, val_loss))
 
-        writer.add_scalar("Loss  (Valdation)", val_loss, epoch)
+        writer.add_scalar("Loss (Valdation)", val_loss, epoch)
 
         # TODO: when turning validation - replace minimum loss with val_loss
-        if epoch == params.reg_start_iter:
+        if epoch == 0:  # params.reg_start_iter:
             min_loss = loss_obj.metrics['total_loss']
 
-        if epoch >= params.reg_start_iter and loss_obj.metrics['total_loss'] <= min_loss:
+        if loss_obj.metrics['total_loss'] <= min_loss:  # and epoch >= params.reg_start_iter:
             min_loss = loss_obj.metrics['total_loss']
 
             # save minimum model
