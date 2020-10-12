@@ -2,69 +2,6 @@ import torch
 import torch.nn.functional as F
 
 
-#
-# def cuboidAreaModule(self, dims):
-#     """
-#     :param: dims:
-#     :return: tensor in shape (1, self.nSamples, 1) where dim 2 is cuboid area
-#     """
-#
-#     width, height, depth = torch.chunk(dims, chunks=3, dim=2)
-#
-#     wh = width * height
-#     hd = height * depth
-#     wd = width * depth
-#
-#     surfArea = 2 * (wh + hd + wd)
-#     areaRep = surfArea.repeat(1, self.nSamples, 1)
-#     return areaRep
-#
-# def sample_wt_module(self, dims):
-#     # dims is bs x 1 x 3
-#     area = self.cuboidAreaModule(dims)  # bs x 1 x 1
-#     dimsInv = dims.pow(-1)
-#     dimsInvNorm = dimsInv.sum(2).repeat(1, 1, 3)
-#     normWeights = 3 * (dimsInv / dimsInvNorm)
-#
-#     widthWt, heightWt, depthWt = torch.chunk(normWeights, chunks=3, dim=2)
-#     widthWt = widthWt.repeat(1, self.samplesPerFace, 1)
-#     heightWt = heightWt.repeat(1, self.samplesPerFace, 1)
-#     depthWt = depthWt.repeat(1, self.samplesPerFace, 1)
-#
-#     sampleWt = torch.cat([widthWt, heightWt, depthWt], dim=1)
-#     finalWt = (1 / self.samplesPerFace) * (sampleWt * area)
-#     return finalWt
-
-# def multi_dist(self, dims):
-#     """
-#
-#     :param dims: Bs x 1 x 3
-#     :return: Bs x 1 x 3
-#     """
-#     width, height, depth = torch.chunk(dims, chunks=3, dim=2)
-#
-#     wh = width * height
-#     hd = height * depth
-#     wd = width * depth
-#
-#     surfArea = (wh + hd + wd)
-#     return torch.tensor([hd, wd, wh]) / surfArea  # .repeat(1, self.nSamples, 1)
-
-
-# def sample_partial_cuboid(bs, bins, nSamplePerFace):
-#     """
-#
-#     :param bs:
-#     :param bins:
-#     :param nSamplePerFace:
-#     :return:
-#     """
-#     a = sample_cudoid(bs, bins ** 3, nSamplePerFace)  # bs x bins**3 x 3 * nSamplePerFace x 3
-#     b = get_cuboid_corner(bins)  # bins**3 x 3
-#     b = b.unsqueeze(0).repeat(bs, 1, 1)  # bs x bins**3 x 3
-#     return a * (1 / bins) + b.unsqueeze(2)
-
-
 def sample_cudoid(bs, nCuboid, nSamplePerFace):
     """
 
@@ -128,37 +65,51 @@ def rotate_cuboid(quats):
     return rot_flat.reshape(quats.shape[0], quats.shape[1], 3, 3)
 
 
-if __name__ == '__main__':
-    import numpy.random as rm
+def get_voxel_centers(dim=5):
+    """
+    Assumptions: volume space is [-1, 1] ^ 3, and voxels are a dim^3 array
+    """
+    voxel_size = 2 / dim
+    ticks = torch.arange(-1,  1, voxel_size) + voxel_size / 2.
+    xs, ys, zs = torch.meshgrid(*([ticks]*3))  # each is (20,20,20)
+    centers = torch.stack([xs, ys, zs], -1).reshape(-1, 3)
+    return centers
 
-    batch_size = 2
-    bins_per_face = 1
-    samples_per_face = 333
-    ncuboid = bins_per_face ** 3
 
-    a = sample_cudoid(batch_size, bins_per_face ** 3, samples_per_face)
 
-    k = torch.rand(batch_size, ncuboid, 4)
 
-    # rotate a by k
 
-    k = F.normalize(k, p=2, dim=2)
-    k = rotate_cuboid(k)  # (bs, nCubiods, 3, 3)
-    k = k.unsqueeze(2)
-
-    # rotate by k
-    a2 = a.unsqueeze(4)
-    a2 = torch.matmul(k, a2).squeeze(4)
-
-    from utils.visualization import plot_pc_mayavi
-
-    plot_pc_mayavi([a2[0][0]], colors=[tuple(rm.random(3)) for i in range(2)])
-
-    # move a to cuboids grid corners
-    b = get_cuboid_corner(bins_per_face)  # bins**3 x 3
-    b = b.unsqueeze(0).repeat(batch_size, 1, 1)  # bs x bins**3 x 3
-    c = a * (1 / bins_per_face) + b.unsqueeze(2)
-
-    # plot_pc_mayavi([c[0][i] for i in range(ncuboid)],
-    #                colors=[tuple(rm.random(3)) for i in range(ncuboid)])
-    plot_pc_mayavi([c[0][0]], colors=[tuple(rm.random(3)) for i in range(2)])
+# if __name__ == '__main__':
+#     import numpy.random as rm
+#
+#     batch_size = 2
+#     bins_per_face = 1
+#     samples_per_face = 333
+#     ncuboid = bins_per_face ** 3
+#
+#     a = sample_cudoid(batch_size, bins_per_face ** 3, samples_per_face)
+#
+#     k = torch.rand(batch_size, ncuboid, 4)
+#
+#     # rotate a by k
+#
+#     k = F.normalize(k, p=2, dim=2)
+#     k = rotate_cuboid(k)  # (bs, nCubiods, 3, 3)
+#     k = k.unsqueeze(2)
+#
+#     # rotate by k
+#     a2 = a.unsqueeze(4)
+#     a2 = torch.matmul(k, a2).squeeze(4)
+#
+#     from utils.visualization import plot_pc_mayavi
+#
+#     plot_pc_mayavi([a2[0][0]], colors=[tuple(rm.random(3)) for i in range(2)])
+#
+#     # move a to cuboids grid corners
+#     b = get_cuboid_corner(bins_per_face)  # bins**3 x 3
+#     b = b.unsqueeze(0).repeat(batch_size, 1, 1)  # bs x bins**3 x 3
+#     c = a * (1 / bins_per_face) + b.unsqueeze(2)
+#
+#     # plot_pc_mayavi([c[0][i] for i in range(ncuboid)],
+#     #                colors=[tuple(rm.random(3)) for i in range(ncuboid)])
+#     plot_pc_mayavi([c[0][0]], colors=[tuple(rm.random(3)) for i in range(2)])

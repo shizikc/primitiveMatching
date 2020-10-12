@@ -72,10 +72,10 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
         writer.add_scalar("Loss (Valdation)", val_loss, epoch)
 
         # TODO: when turning validation - replace minimum loss with val_loss
-        if epoch == 0:  # params.reg_start_iter:
+        if epoch == params.reg_start_iter:
             min_loss = loss_obj.metrics['total_loss']
 
-        if loss_obj.metrics['total_loss'] <= min_loss:  # and epoch >= params.reg_start_iter:
+        if epoch >= params.reg_start_iter and loss_obj.metrics['total_loss'] <= min_loss:
             min_loss = loss_obj.metrics['total_loss']
 
             # save minimum model
@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
     model, opt = get_model()
     MNLoss = MatchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
-                          bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff)
+                          bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff, bins=params.bins)
     fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl)
 
     # writer.flush()

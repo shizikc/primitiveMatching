@@ -15,9 +15,10 @@ class MatchNet(nn.Module):
         self.dev = dev
         self.samples = sample_cudoid(1, self.bins ** 3, self.samplesPerFace).to(self.dev)
 
-    def forward(self, x):
+    def forward(self, x, add_samples=False):
         """
 
+        :param sample:
         :param x: in torch.Size(bs, nPoints, 3)
         :return: pred in (bs, nCuboid, 3*nSamplePerFace, 3)
         """
@@ -27,6 +28,7 @@ class MatchNet(nn.Module):
         samples = self.samples.repeat(bs, 1, 1, 1)
 
         x, _ = self.encoder(x)  # bs x 11*bins**3
+
         z, q, t, p = torch.split_with_sizes(x,
                                             tuple(torch.tensor([3, 4, 3, 1]) * (self.bins ** 3)), axis=1)
 
@@ -36,20 +38,23 @@ class MatchNet(nn.Module):
                                                      1)  # bs x bins^3 x nSaples x 3
         q = q.reshape(bs, -1, 4)
 
-        # rotate by q
-        q = F.normalize(q, p=2, dim=2)
-        q = rotate_cuboid(q).unsqueeze(2)  # (bs, nCubiods, 3, 3)
-        out = samples.unsqueeze(4)
-        out = torch.matmul(q, out).squeeze(4)
+        if add_samples:
+            # rotate by q
+            q = F.normalize(q, p=2, dim=2)
+            q = rotate_cuboid(q).unsqueeze(2)  # (bs, nCubiods, 3, 3)
+            out = samples.unsqueeze(4)
+            out = torch.matmul(q, out).squeeze(4)
 
-        # move to voxels
-        b = get_cuboid_corner(self.bins).to(self.dev)  # bins**3 x 3
-        b = b.unsqueeze(0).repeat(bs, 1, 1)  # bs x bins**3 x 3
-        out = out * (1 / self.bins) + b.unsqueeze(2)
+            # move to voxels
+            b = get_cuboid_corner(self.bins).to(self.dev)  # bins**3 x 3
+            b = b.unsqueeze(0).repeat(bs, 1, 1)  # bs x bins**3 x 3
+            out = out * (1 / self.bins) + b.unsqueeze(2)
 
-        # translate by t, scale by z
-        out = out * z + t
-        return out, p, z
+            # translate by t, scale by z
+            out = out * z + t
+            return out, p, z
+        return None, p, None
+
 
 
 if __name__ == '__main__':
