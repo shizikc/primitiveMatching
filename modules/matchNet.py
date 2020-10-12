@@ -19,7 +19,7 @@ class MatchNet(nn.Module):
         """
 
         :param x: in torch.Size(bs, nPoints, 3)
-        :return:
+        :return: pred in (bs, nCuboid, 3*nSamplePerFace, 3)
         """
         bs = x.shape[0]
 
