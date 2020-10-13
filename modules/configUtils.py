@@ -11,11 +11,11 @@ def get_args():
                         # default='C:/Users/sharon/Documents/Research/ObjectCompletion3D/model/')
                         default='/home/coopers/models/')
     parser.add_argument('--train_path',
-                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\train\\gt\\04530566\\')
-                        default='/home/coopers/data/train/gt/04530566/')
+                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\train\\gt\\02691156\\')
+                        default='/home/coopers/data/train/gt/02691156/')
     parser.add_argument('--val_path',
-                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\val\\gt\\04530566\\')
-                        default='/home/coopers/data/val/gt/04530566/')
+                        # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\val\\gt\\02691156\\')
+                        default='/home/coopers/data/val/gt/02691156/')
     parser.add_argument('--max_epoch', type=int, default=300, help='Epoch to run [default: 100]')
     parser.add_argument('--bins', type=int, default=10, help='resolution of main cube [default: 10]')
     parser.add_argument('--samples_per_face', type=int, default=100, help='number of samples per voxel [default: 20]')
