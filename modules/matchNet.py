@@ -2,15 +2,14 @@ import torch
 import torch.nn as nn
 
 from modules.cuboid import sample_cudoid, rotate_cuboid, get_cuboid_corner
-from modules.pointnet import ClassificationPointNet
-import torch.nn.functional as F
+from modules.pointnet import PointNetCls
 
 
 class MatchNet(nn.Module):
     def __init__(self, bins, samplesPerFace, dev):
         super(MatchNet, self).__init__()
         self.bins = bins  # per face partition
-        self.encoder1 = ClassificationPointNet(self.bins ** 3)
+        self.encoderBlock1 = PointNetCls(self.bins ** 3)
         self.samplesPerFace = samplesPerFace
         self.dev = dev
         self.samples = sample_cudoid(1, self.bins ** 3, self.samplesPerFace).to(self.dev)
@@ -25,9 +24,9 @@ class MatchNet(nn.Module):
         bs = x.shape[0]
 
         # uniformly sampled cuboids in [-1,1], shape torch.Size([bs, bins**3, nSamples, 3])
-        samples = self.samples.repeat(bs, 1, 1, 1)
+        # samples = self.samples.repeat(bs, 1, 1, 1)
 
-        p = self.encoder1(x)  # bs x bins**3
+        p = self.encoderBlock1(x)  # bs x bins**3
 
         # z, q, t, p = torch.split_with_sizes(x,
         #                                     tuple(torch.tensor([3, 4, 3, 1]) * (self.bins ** 3)), axis=1)
