@@ -117,7 +117,7 @@ class ClassificationPointNet(nn.Module):
         x = F.relu(self.bn_2(self.fc_2(x)))
         x = self.dropout_1(x)
 
-        return torch.softmax(self.fc_3(x), dim=1), feature_transform
+        return torch.softmax(self.fc_3(x), dim=1)
 
 
 if __name__ == '__main__':

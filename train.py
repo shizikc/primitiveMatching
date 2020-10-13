@@ -46,10 +46,14 @@ def loss_batch(model, loss_func, xb, yb, opt=None):
 
 def get_model():
     model = MatchNet(bins=params.bins, samplesPerFace=params.samples_per_face, dev=dev)
+
     if params.optimizer == "adam":
         opt = optim.Adam(model.parameters(), lr=params.lr)
     else:
-        opt = optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
+        opt = optim.SGD(model.parameters(),
+                        lr=params.lr,
+                        momentum=params.momentum)
+
     lr_scheduler = torch.optim.lr_scheduler.StepLR(opt,
                                                    step_size=100,
                                                    gamma=0.96)
@@ -57,7 +61,6 @@ def get_model():
 
 
 def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
-    # x_part, diff_gt, p_gt = next(iter(train_dl))
 
     for epoch in range(epochs):
         loss_obj.iter = epoch
@@ -119,8 +122,10 @@ if __name__ == '__main__':
     train_dl, valid_dl = get_data(train_ds, valid_ds, params.batch_size)
 
     model, opt = get_model()
+
     MNLoss = MatchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
                           bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff, bins=params.bins)
+
     fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl)
 
     writer.flush()
