@@ -27,59 +27,21 @@ writer = SummaryWriter(params.log_dir)
 
 def get_data(train_ds, valid_ds, bs):
     return (
+        # TODO;; change back to shuffle true
         DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True),
         DataLoader(valid_ds, batch_size=bs * 2, drop_last=True),
     )
 
 
-# loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt)
 def loss_batch(model, loss_func, xb, yb, opt=None):
     loss = loss_func(model(xb), yb)
 
     if opt is not None:
+        opt.zero_grad()
         loss.backward()
         opt.step()
-        opt.zero_grad()
 
     return loss.item(), len(xb)
-
-
-def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
-    for epoch in range(epochs):
-        loss_obj.iter = epoch
-
-        model.train()
-        for x_part, diff_gt, p_gt in train_dl:
-            loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt)
-
-        logging.info(
-            "Epoch (Train): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
-            " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
-
-        writer.add_scalar("Loss (Train)", loss_obj.metrics["total_loss"], epoch)
-
-        model.eval()
-        with torch.no_grad():
-            losses, nums = zip(
-                *[loss_batch(model, loss_obj.loss_func, x_part,
-                             (diff_gt, p_gt)) for x_part, diff_gt, p_gt in valid_dl]
-            )
-
-        val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
-
-        logging.info("Epoch (Valid): {:3d}, total loss : {:05.4f}".format(epoch, val_loss))
-
-        writer.add_scalar("Loss (Valdation)", val_loss, epoch)
-
-        # TODO: when turning validation - replace minimum loss with val_loss
-        if epoch == params.reg_start_iter:
-            min_loss = loss_obj.metrics['total_loss']
-
-        if epoch >= params.reg_start_iter and loss_obj.metrics['total_loss'] <= min_loss:
-            min_loss = loss_obj.metrics['total_loss']
-
-            # save minimum model
-            torch.save(model.state_dict(), params.model_path + "model_" + str(run_id) + ".pt")
 
 
 def get_model():
@@ -88,7 +50,52 @@ def get_model():
         opt = optim.Adam(model.parameters(), lr=params.lr)
     else:
         opt = optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
-    return model.to(dev), opt
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(opt,
+                                                   step_size=3,
+                                                   gamma=0.96)
+    return model.to(dev), (opt, lr_scheduler)
+
+
+def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
+    # x_part, diff_gt, p_gt = next(iter(train_dl))
+
+    for epoch in range(epochs):
+        loss_obj.iter = epoch
+
+        model.train()
+        for idx, (x_part, diff_gt, p_gt) in enumerate(train_dl):
+            loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt[0])
+
+        logging.info(
+            "Epoch (Train): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
+            " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
+
+        # update the learning rate
+        opt[1].step()
+
+        writer.add_scalar("Loss (Train)", loss_obj.metrics["total_loss"], epoch)
+        writer.add_scalar("Accuracy (Train)", loss_obj.metrics["acc"], epoch)
+
+        model.eval()
+        with torch.no_grad():
+            for x_part_v, diff_gt_v, p_gt_v in valid_dl:
+                loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p_gt_v))
+            logging.info(
+                "Epoch (Valid): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
+                " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
+
+            writer.add_scalar("Loss (Validation)", loss_obj.metrics["total_loss"], epoch)
+            writer.add_scalar("Accuracy (Validation)", loss_obj.metrics["acc"], epoch)
+
+        # # TODO: when turning validation - replace minimum loss with val_loss
+        # if epoch == params.reg_start_iter:
+        #     min_loss = loss_obj.metrics['total_loss']
+        #
+        # if epoch >= params.reg_start_iter and loss_obj.metrics['total_loss'] <= min_loss:
+        #     min_loss = loss_obj.metrics['total_loss']
+        #
+        #     # save minimum model
+        #     torch.save(model.state_dict(), params.model_path + "model_" + str(run_id) + ".pt")
 
 
 if __name__ == '__main__':
@@ -116,9 +123,10 @@ if __name__ == '__main__':
                           bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff, bins=params.bins)
     fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl)
 
-    # writer.flush()
+    writer.flush()
     writer.close()
 
     update_tracking(run_id, "total_loss", MNLoss.metrics["total_loss"].cpu().detach().numpy())
     update_tracking(run_id, "pred_loss", MNLoss.metrics["pred_loss"].cpu().detach().numpy())
     update_tracking(run_id, "c_loss", MNLoss.metrics["c_loss"].cpu().detach().numpy())
+    update_tracking(run_id, "ended_time", "{:%m%d_%H%M}".format(datetime.now()))

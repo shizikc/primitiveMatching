@@ -29,7 +29,7 @@ class MatchNetLoss(nn.Module):
                         p_gt in torch.Size([bs, bins^3])
         :return:
         """
-        diff_gt = gt[0] # bs x 256 x  3
+        diff_gt = gt[0]  # bs x 256 x  3
         prob_target = gt[1]
 
         if pred[0] is not None:
@@ -42,6 +42,7 @@ class MatchNetLoss(nn.Module):
         bs = diff_gt.shape[0]
 
         train_reg = self.iter >= self.reg_start_iter
+
         # entroy loss
         pred_loss = self.bce_loss(probs_pred, prob_target)
 
@@ -51,24 +52,19 @@ class MatchNetLoss(nn.Module):
 
         fn = ((mask != prob_target).float() * (prob_target == 1).float()).mean()
 
-        # mask = mask.unsqueeze(2).repeat(1, 1, 3)  # torch.Size([bs, bins^3, 3])
-        # mask = mask.unsqueeze(2).repeat(1, 1, diff_pred.shape[2], 1)
-
         if train_reg:
             # TODO: replace loop
             CD = 0.
             for i in range(bs):
-                # diff_pred_i = diff_pred[i][mask[i]].reshape(-1, 3)  # nPoints predicted x 3
                 pred_i = self.centers[mask[i], :]  # torch.Size([nPositiveBins, 3])
                 # any points detected
                 if pred_i.shape[0] > 0:
                     CD += chamfer_distance(pred_i.unsqueeze(0), diff_gt[i].unsqueeze(0))
-                    # CD += symmetric_chamfer_distance(pred_i.unsqueeze(0), diff_gt[i].unsqueeze(0))
             c_loss = CD / bs
         else:
             c_loss = torch.tensor(0.)
 
-        total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss + fn # + acc
+        total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss + fn  # + acc
 
         self.metrics = {'epoch': self.iter,
                         'total_loss': total_loss,
