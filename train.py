@@ -51,7 +51,7 @@ def get_model():
     else:
         opt = optim.SGD(model.parameters(), lr=params.lr, momentum=params.momentum)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(opt,
-                                                   step_size=3,
+                                                   step_size=100,
                                                    gamma=0.96)
     return model.to(dev), (opt, lr_scheduler)
 
