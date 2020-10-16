@@ -10,6 +10,7 @@ class MatchNet(nn.Module):
         super(MatchNet, self).__init__()
         self.bins = bins  # per face partition
         self.encoderBlock1 = PointNetCls(self.bins ** 3)
+
         self.samplesPerFace = samplesPerFace
         self.dev = dev
         self.samples = sample_cudoid(1, self.bins ** 3, self.samplesPerFace).to(self.dev)

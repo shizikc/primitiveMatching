@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -126,7 +125,6 @@ class PointNetfeat(nn.Module):
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
         self.conv3 = torch.nn.Conv1d(128, 1024, 1)
 
-
         self.bn1 = nn.BatchNorm1d(64)
         self.bn2 = nn.BatchNorm1d(128)
         self.bn3 = nn.BatchNorm1d(1024)
@@ -234,16 +232,16 @@ class PointNetDenseCls(nn.Module):
 
     def forward(self, x):
         x = x.transpose(-1, 2)
-        x, _, _ = self.feat(x) # torch.Size([bs, 1088, num_points])
+        x, _, _ = self.feat(x)  # torch.Size([bs, 1088, num_points])
         if x.shape[0] > 1:
-            x = F.relu(self.bn1(self.conv1(x))) # : torch.Size([bs, 512, num_points])
-            x = F.relu(self.bn2(self.conv2(x))) #torch.Size([bs, 256, num_points])
-            x = F.relu(self.bn3(self.conv3(x))) # torch.Size([bs, 128, num_points])
+            x = F.relu(self.bn1(self.conv1(x)))  # : torch.Size([bs, 512, num_points])
+            x = F.relu(self.bn2(self.conv2(x)))  # torch.Size([bs, 256, num_points])
+            x = F.relu(self.bn3(self.conv3(x)))  # torch.Size([bs, 128, num_points])
         else:
-            x = F.relu(self.in1(self.conv1(x))) # : torch.Size([bs, 512, num_points])
-            x = F.relu(self.in2(self.conv2(x))) #torch.Size([bs, 256, num_points])
-            x = F.relu(self.in3(self.conv3(x))) # torch.Size([bs, 128, num_points])
-        x = self.conv4(x) # torch.Size([bs, k, points])
+            x = F.relu(self.in1(self.conv1(x)))  # : torch.Size([bs, 512, num_points])
+            x = F.relu(self.in2(self.conv2(x)))  # torch.Size([bs, 256, num_points])
+            x = F.relu(self.in3(self.conv3(x)))  # torch.Size([bs, 128, num_points])
+        x = self.conv4(x)  # torch.Size([bs, k, points])
 
         return x
 
@@ -284,7 +282,6 @@ if __name__ == '__main__':
     cls = PointNetCls(k=100)
     out = cls(sim_data)
     print('class', out.size())  # torch.Size([bs, k]).
-
 
     seg = PointNetDenseCls(k=50)
     out = seg(sim_data)

@@ -5,7 +5,6 @@ import numpy as np
 from torch import optim
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-
 from data.shapeNet import ShapeDiffDataset
 from modules.configUtils import get_args, update_tracking
 from modules.losses import MatchNetLoss
@@ -27,7 +26,7 @@ writer = SummaryWriter(params.log_dir)
 
 def get_data(train_ds, valid_ds, bs):
     return (
-        # TODO;; change back to shuffle true
+        # TODO: change back to shuffle true
         DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True),
         DataLoader(valid_ds, batch_size=bs * 2, drop_last=True),
     )
@@ -55,8 +54,8 @@ def get_model():
                         momentum=params.momentum)
 
     lr_scheduler = torch.optim.lr_scheduler.StepLR(opt,
-                                                   step_size=100,
-                                                   gamma=0.96)
+                                                   step_size=params.step_size,
+                                                   gamma=params.gamma)
     return model.to(dev), (opt, lr_scheduler)
 
 
@@ -67,28 +66,30 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
 
         model.train()
         for idx, (x_part, diff_gt, p_gt) in enumerate(train_dl):
-            loss_batch(model, loss_obj.loss_func, x_part, (diff_gt, p_gt), opt[0])
+            loss_batch(model, loss_obj.loss_func, diff_gt, (x_part, p_gt), opt[0])
 
         logging.info(
             "Epoch (Train): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
             " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
 
         # update the learning rate
-        opt[1].step()
+        if opt[1].get_lr()[0] > params.min_lr:
+            opt[1].step()
 
         writer.add_scalar("Loss (Train)", loss_obj.metrics["total_loss"], epoch)
         writer.add_scalar("Accuracy (Train)", loss_obj.metrics["acc"], epoch)
+        writer.add_scalar("False Negative (Train)", loss_obj.metrics["fn"], epoch)
 
-        model.eval()
-        with torch.no_grad():
-            for x_part_v, diff_gt_v, p_gt_v in valid_dl:
-                loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p_gt_v))
-            logging.info(
-                "Epoch (Valid): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
-                " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
-
-            writer.add_scalar("Loss (Validation)", loss_obj.metrics["total_loss"], epoch)
-            writer.add_scalar("Accuracy (Validation)", loss_obj.metrics["acc"], epoch)
+        # model.eval()
+        # with torch.no_grad():
+        #     for x_part_v, diff_gt_v, p_gt_v in valid_dl:
+        #         loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p_gt_v))
+        #     logging.info(
+        #         "Epoch (Valid): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
+        #         " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
+        #
+        #     writer.add_scalar("Loss (Validation)", loss_obj.metrics["total_loss"], epoch)
+        #     writer.add_scalar("Accuracy (Validation)", loss_obj.metrics["acc"], epoch)
 
         # # TODO: when turning validation - replace minimum loss with val_loss
         # if epoch == params.reg_start_iter:
@@ -134,4 +135,5 @@ if __name__ == '__main__':
     update_tracking(run_id, "total_loss", MNLoss.metrics["total_loss"].cpu().detach().numpy())
     update_tracking(run_id, "pred_loss", MNLoss.metrics["pred_loss"].cpu().detach().numpy())
     update_tracking(run_id, "c_loss", MNLoss.metrics["c_loss"].cpu().detach().numpy())
+    update_tracking(run_id, "Accuracy", MNLoss.metrics["acc"].cpu().detach().numpy())
     update_tracking(run_id, "ended_time", "{:%m%d_%H%M}".format(datetime.now()))

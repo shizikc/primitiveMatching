@@ -43,10 +43,10 @@ class MatchNetLoss(nn.Module):
 
         train_reg = self.iter >= self.reg_start_iter
 
+        mask = torch.relu(probs_pred - self.threshold)
+
         # entroy loss
         pred_loss = self.bce_loss(probs_pred, prob_target)
-
-        mask = probs_pred > self.threshold  # bs x bins^3
 
         acc = (mask == prob_target).float().mean()
 
@@ -71,7 +71,7 @@ class MatchNetLoss(nn.Module):
                         'pred_loss': pred_loss,
                         'c_loss': c_loss,
                         'acc': acc,
-                        "fn": fn}
+                        'fn': fn}
 
         return total_loss
 
