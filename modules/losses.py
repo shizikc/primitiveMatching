@@ -32,8 +32,7 @@ class MatchNetLoss(nn.Module):
         diff_gt = gt[0]  # bs x 256 x  3
         prob_target = gt[1]
 
-        if pred[0] is not None:
-            diff_pred = pred[0]  # bs x bins^3 x nSaples x 3
+        diff_pred = pred[0]  # bs x bins^3 x nSaples x 3
         probs_pred = pred[1]  # bs x bins^3
 
         dev = prob_target.device
@@ -43,13 +42,12 @@ class MatchNetLoss(nn.Module):
 
         train_reg = self.iter >= self.reg_start_iter
 
-        mask = torch.relu(probs_pred - self.threshold)
+        mask = torch.relu(probs_pred - self.threshold).long()
 
         # entroy loss
         pred_loss = self.bce_loss(probs_pred, prob_target)
 
         acc = (mask == prob_target).float().mean()
-
         fn = ((mask != prob_target).float() * (prob_target == 1).float()).mean()
 
         if train_reg:

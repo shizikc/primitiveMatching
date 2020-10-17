@@ -184,7 +184,6 @@ class PointNetCls(nn.Module):
         self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
 
         self.fc1 = nn.Linear(1024, 512)
-
         self.fc2 = nn.Linear(512, 256)
         self.fc3 = nn.Linear(256, k, bias=True)
 

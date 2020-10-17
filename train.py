@@ -73,23 +73,24 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
             " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
 
         # update the learning rate
-        if opt[1].get_lr()[0] > params.min_lr:
+        if opt[1].get_last_lr()[0] > params.min_lr:
             opt[1].step()
 
         writer.add_scalar("Loss (Train)", loss_obj.metrics["total_loss"], epoch)
         writer.add_scalar("Accuracy (Train)", loss_obj.metrics["acc"], epoch)
         writer.add_scalar("False Negative (Train)", loss_obj.metrics["fn"], epoch)
 
-        # model.eval()
-        # with torch.no_grad():
-        #     for x_part_v, diff_gt_v, p_gt_v in valid_dl:
-        #         loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p_gt_v))
-        #     logging.info(
-        #         "Epoch (Valid): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
-        #         " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
-        #
-        #     writer.add_scalar("Loss (Validation)", loss_obj.metrics["total_loss"], epoch)
-        #     writer.add_scalar("Accuracy (Validation)", loss_obj.metrics["acc"], epoch)
+        model.eval()
+        with torch.no_grad():
+            for x_part_v, diff_gt_v, p_gt_v in valid_dl:
+                loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p_gt_v))
+            logging.info(
+                "Epoch (Valid): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
+                " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
+
+            writer.add_scalar("Loss (Validation)", loss_obj.metrics["total_loss"], epoch)
+            writer.add_scalar("Accuracy (Validation)", loss_obj.metrics["acc"], epoch)
+            writer.add_scalar("False Negative (Validation)", loss_obj.metrics["fn"], epoch)
 
         # # TODO: when turning validation - replace minimum loss with val_loss
         # if epoch == params.reg_start_iter:
