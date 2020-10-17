@@ -26,7 +26,6 @@ writer = SummaryWriter(params.log_dir)
 
 def get_data(train_ds, valid_ds, bs):
     return (
-        # TODO: change back to shuffle true
         DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True),
         DataLoader(valid_ds, batch_size=bs * 2, drop_last=True),
     )
