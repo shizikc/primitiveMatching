@@ -191,9 +191,11 @@ class PointNetCls(nn.Module):
 
         self.in1 = nn.InstanceNorm1d(512)
         self.in2 = nn.InstanceNorm1d(256)
+        self.in3 = nn.InstanceNorm1d(k)
 
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
+        self.bn3 = nn.BatchNorm1d(k)
 
         self.relu = nn.ReLU()
 
@@ -205,8 +207,8 @@ class PointNetCls(nn.Module):
             x = F.relu(self.bn1(self.fc1(x)))
             x = F.relu(self.bn2(self.dropout(self.fc2(x))))
         else:
-            x = F.relu(self.fc1(x))
-            x = F.relu(self.dropout(self.fc2(x)))
+            x = F.relu(self.in1(self.fc1(x)))
+            x = F.relu(self.in2(self.dropout(self.fc2(x))))
         x = self.fc3(x)
         return torch.sigmoid(x)
 
@@ -221,6 +223,7 @@ class PointNetDenseCls(nn.Module):
         self.conv2 = torch.nn.Conv1d(512, 256, 1)
         self.conv3 = torch.nn.Conv1d(256, 128, 1)
         self.conv4 = torch.nn.Conv1d(128, self.k, 1)
+
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.bn3 = nn.BatchNorm1d(128)

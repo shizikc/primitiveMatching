@@ -59,34 +59,48 @@ def get_model():
     return model.to(dev), (opt, lr_scheduler)
 
 
-def fit(epochs, model, loss_obj, opt, train_dl, valid_dl):
+def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
 
     for epoch in range(epochs):
         loss_obj.iter = epoch
 
+        # if epoch > 0:
+        #     print("hi")
+
         model.train()
+        loss_obj.reset_loss()
+
         for idx, (x_part, diff_gt, p_gt) in enumerate(train_dl):
-            loss_batch(model, loss_obj.loss_func, diff_gt, (x_part, p_gt), opt[0])
+            loss_batch(model, loss_obj.loss_func, diff_gt, (x_part, p_gt), opt)
+
+        loss_obj.end_epoch(idx + 1)
 
         logging.info(
-            "Epoch (Train): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
-            " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
+            "Epoch (Train): %(epoch).1f, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
+            " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f, "
+            "Precision : %(precision).4f,  Recall : %(recall).4f" % loss_obj.metrics)
 
         # update the learning rate
-        if opt[1].get_last_lr()[0] > params.min_lr:
-            opt[1].step()
+        if lr_opt.get_last_lr()[0] > params.min_lr:
+            lr_opt.step()
 
         writer.add_scalar("Loss (Train)", loss_obj.metrics["total_loss"], epoch)
         writer.add_scalar("Accuracy (Train)", loss_obj.metrics["acc"], epoch)
         writer.add_scalar("False Negative (Train)", loss_obj.metrics["fn"], epoch)
+        writer.add_scalar("Precision (Train)", loss_obj.metrics["precision"], epoch)
+        writer.add_scalar("Recall", loss_obj.metrics["recall"], epoch)
 
         model.eval()
+        loss_obj.reset_loss()
         with torch.no_grad():
-            for x_part_v, diff_gt_v, p_gt_v in valid_dl:
+            for i, (x_part_v, diff_gt_v, p_gt_v) in enumerate(valid_dl):
                 loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p_gt_v))
+            loss_obj.end_epoch(i + 1)
+
             logging.info(
-                "Epoch (Valid): %(epoch)3d, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
-                " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f" % loss_obj.metrics)
+                "Epoch (Valid): %(epoch).1f, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
+                " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f, "
+                "Precision : %(precision).4f,  Recall : %(recall).4f" % loss_obj.metrics)
 
             writer.add_scalar("Loss (Validation)", loss_obj.metrics["total_loss"], epoch)
             writer.add_scalar("Accuracy (Validation)", loss_obj.metrics["acc"], epoch)
@@ -117,6 +131,7 @@ if __name__ == '__main__':
     update_tracking(run_id, "reg_start_iter", params.reg_start_iter)
     update_tracking(run_id, "bce_coeff", params.bce_coeff)
     update_tracking(run_id, "cd_coeff", params.cd_coeff)
+    update_tracking(run_id, "fn_coeff", params.fn_coeff)
 
     train_ds = ShapeDiffDataset(params.train_path, params.bins, dev)
     valid_ds = ShapeDiffDataset(params.val_path, params.bins, dev)
@@ -126,9 +141,9 @@ if __name__ == '__main__':
     model, opt = get_model()
 
     MNLoss = MatchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
-                          bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff, bins=params.bins)
+                          bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff, fn_coeff=params.fn_coeff, bins=params.bins)
 
-    fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl)
+    fit(params.max_epoch, model, MNLoss, opt[0], train_dl, valid_dl, opt[1])
 
     writer.flush()
     writer.close()
