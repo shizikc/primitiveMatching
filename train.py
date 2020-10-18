@@ -9,6 +9,8 @@ from data.shapeNet import ShapeDiffDataset
 from modules.configUtils import get_args, update_tracking
 from modules.losses import MatchNetLoss
 from modules.matchNet import MatchNet
+from tqdm import tqdm
+
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                     level=logging.INFO,
@@ -60,7 +62,7 @@ def get_model():
 
 def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
 
-    for epoch in range(epochs):
+    for epoch in tqdm(range(epochs)):
         loss_obj.iter = epoch
 
         # if epoch > 0:

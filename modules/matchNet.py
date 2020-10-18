@@ -28,7 +28,6 @@ class MatchNet(nn.Module):
         # samples = self.samples.repeat(bs, 1, 1, 1)
 
         p = self.encoderBlock1(x)  # bs x bins**3
-
         # z, q, t, p = torch.split_with_sizes(x,
         #                                     tuple(torch.tensor([3, 4, 3, 1]) * (self.bins ** 3)), axis=1)
         #

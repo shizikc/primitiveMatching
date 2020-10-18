@@ -30,7 +30,7 @@ class MatchNetLoss(nn.Module):
     def end_epoch(self, last_epoch):
         for key, value in self.metrics.items():
             if key != 'epoch':
-                self.metrics[key] = self.metrics[key].true_divide( last_epoch )
+                self.metrics[key] = self.metrics[key].true_divide(last_epoch)
 
     def loss_func(self, pred, gt):
         """
@@ -76,7 +76,7 @@ class MatchNetLoss(nn.Module):
                 # any points detected
                 if pred_i.shape[0] > 0:
                     CD += chamfer_distance(pred_i.unsqueeze(0), diff_gt[i].unsqueeze(0))
-            c_loss = CD / bs
+            c_loss = CD.true_divide(bs)
         else:
             c_loss = torch.tensor(0.)
 

@@ -8,9 +8,9 @@ import torch.nn.functional as F
 
 
 class STN3d(nn.Module):
-    def __init__(self):
+    def __init__(self, channel=3):
         super(STN3d, self).__init__()
-        self.conv1 = torch.nn.Conv1d(3, 64, 1)
+        self.conv1 = torch.nn.Conv1d(channel, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
         self.conv3 = torch.nn.Conv1d(128, 1024, 1)
         self.fc1 = nn.Linear(1024, 512)
@@ -261,25 +261,6 @@ def feature_transform_regularizer(trans):
 if __name__ == '__main__':
     sim_data = Variable(torch.rand(32, 2500, 3))
     trans = STN3d()
-    #
-    # out = trans(sim_data)
-    # print('stn', out.size())
-
-    # print('loss', feature_transform_regularizer(out))
-
-    # sim_data_64d = Variable(torch.rand(32, 64, 2500))
-    # trans = STNkd(k=64)
-    # out = trans(sim_data_64d)
-    # print('stn64d', out.size())
-    # # print('loss', feature_transform_regularizer(out))
-    #
-    # pointfeat = PointNetfeat(global_feat=False)
-    # out, _, _ = pointfeat(sim_data)
-    # print('global feat', out.sum())
-    #
-    # pointfeat = PointNetfeat(global_feat=False)
-    # out, _, _ = pointfeat(sim_data)
-    # print('point feat', out.size())
 
     cls = PointNetCls(k=100)
     out = cls(sim_data)
