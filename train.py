@@ -1,35 +1,51 @@
 import logging
+import os
 from datetime import datetime
+from pathlib import Path
+
 import torch
 import numpy as np
 from torch import optim
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from data.shapeNet import ShapeDiffDataset
-from modules.configUtils import get_args, update_tracking
+from modules.configUtils import get_args, update_tracking, detach_dict
 from modules.losses import MatchNetLoss
 from modules.matchNet import MatchNet
 from tqdm import tqdm
 
+np.random.seed(1)
+torch.manual_seed(1)
+torch.cuda.manual_seed(1)
+
+torch.backends.cudnn.benchmark = True
+
+run_id = "{:%m%d_%H%M}".format(datetime.now())
+
+params = get_args()
+
+MODEL_LOG_PATH = Path(params.model_path, run_id)
+
+if not os.path.exists(MODEL_LOG_PATH):
+    os.makedirs(MODEL_LOG_PATH)
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
+                    filename=Path(MODEL_LOG_PATH, "log.txt"),
                     level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 ## Params ##
 dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-run_id = "{:%m%d_%H%M}".format(datetime.now())
-
-params = get_args()
-
-writer = SummaryWriter(params.log_dir)
+writer = SummaryWriter(MODEL_LOG_PATH)
 
 
-def get_data(train_ds, valid_ds, bs):
+def get_data():
+    train_ds = ShapeDiffDataset(params.train_path, params.bins, dev)
+    valid_ds = ShapeDiffDataset(params.val_path, params.bins, dev)
     return (
-        DataLoader(train_ds, batch_size=bs, shuffle=True, drop_last=True),
-        DataLoader(valid_ds, batch_size=bs * 2, drop_last=True),
+        DataLoader(train_ds, batch_size=params.batch_size, shuffle=True, drop_last=True),
+        DataLoader(valid_ds, batch_size=params.batch_size * 2, drop_last=True)
     )
 
 
@@ -61,20 +77,16 @@ def get_model():
 
 
 def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
-
-    for epoch in tqdm(range(epochs)):
+    for epoch in tqdm(range(epochs), desc="Epoch", position=0):
         loss_obj.iter = epoch
-
-        # if epoch > 0:
-        #     print("hi")
 
         model.train()
         loss_obj.reset_loss()
 
-        for idx, (x_part, diff_gt, p_gt) in enumerate(train_dl):
+        for x_part, diff_gt, p_gt in train_dl:
             loss_batch(model, loss_obj.loss_func, diff_gt, (x_part, p_gt), opt)
 
-        loss_obj.end_epoch(idx + 1)
+        loss_obj.end_epoch(len(train_dl))
 
         logging.info(
             "Epoch (Train): %(epoch).1f, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
@@ -89,7 +101,7 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
         writer.add_scalar("Accuracy (Train)", loss_obj.metrics["acc"], epoch)
         writer.add_scalar("False Negative (Train)", loss_obj.metrics["fn"], epoch)
         writer.add_scalar("Precision (Train)", loss_obj.metrics["precision"], epoch)
-        writer.add_scalar("Recall", loss_obj.metrics["recall"], epoch)
+        writer.add_scalar("Recall (Train)", loss_obj.metrics["recall"], epoch)
 
         model.eval()
         loss_obj.reset_loss()
@@ -106,51 +118,38 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
             writer.add_scalar("Loss (Validation)", loss_obj.metrics["total_loss"], epoch)
             writer.add_scalar("Accuracy (Validation)", loss_obj.metrics["acc"], epoch)
             writer.add_scalar("False Negative (Validation)", loss_obj.metrics["fn"], epoch)
+            writer.add_scalar("Precision (Validation)", loss_obj.metrics["precision"], epoch)
+            writer.add_scalar("Recall (Validation)", loss_obj.metrics["recall"], epoch)
 
-        # # TODO: when turning validation - replace minimum loss with val_loss
-        # if epoch == params.reg_start_iter:
-        #     min_loss = loss_obj.metrics['total_loss']
-        #
-        # if epoch >= params.reg_start_iter and loss_obj.metrics['total_loss'] <= min_loss:
-        #     min_loss = loss_obj.metrics['total_loss']
-        #
-        #     # save minimum model
-        #     torch.save(model.state_dict(), params.model_path + "model_" + str(run_id) + ".pt")
+        # TODO: when turning validation - replace minimum loss with val_loss
+        if epoch == 0:  # params.reg_start_iter:
+            min_loss = loss_obj.metrics['total_loss']
+
+        if epoch >= params.reg_start_iter and loss_obj.metrics['total_loss'] <= min_loss:
+            min_loss = loss_obj.metrics['total_loss']
+
+            # save best model
+            torch.save(model.state_dict(), Path(MODEL_LOG_PATH, "model.pt"))
+    return min_loss
 
 
 if __name__ == '__main__':
-    update_tracking(run_id, "optimizer", params.optimizer)
-    update_tracking(run_id, "bins", params.bins)
-    update_tracking(run_id, "samples_per_face", params.samples_per_face)
-    update_tracking(run_id, "lr", params.lr)
-    update_tracking(run_id, "momentum", params.momentum)
-    update_tracking(run_id, "train_path", params.train_path)
-    update_tracking(run_id, "val_path", params.val_path)
-    update_tracking(run_id, "batch_size", params.batch_size)
-    update_tracking(run_id, "max_epoch", params.max_epoch)
-    update_tracking(run_id, "threshold", params.threshold)
-    update_tracking(run_id, "reg_start_iter", params.reg_start_iter)
-    update_tracking(run_id, "bce_coeff", params.bce_coeff)
-    update_tracking(run_id, "cd_coeff", params.cd_coeff)
-    update_tracking(run_id, "fn_coeff", params.fn_coeff)
+    update_tracking(id=run_id, data=vars(params), csv_file=Path(MODEL_LOG_PATH, "tracking.csv"))
 
-    train_ds = ShapeDiffDataset(params.train_path, params.bins, dev)
-    valid_ds = ShapeDiffDataset(params.val_path, params.bins, dev)
-
-    train_dl, valid_dl = get_data(train_ds, valid_ds, params.batch_size)
+    train_dl, valid_dl = get_data()
 
     model, opt = get_model()
 
     MNLoss = MatchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
-                          bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff, fn_coeff=params.fn_coeff, bins=params.bins)
+                          bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff,
+                          fn_coeff=params.fn_coeff, bins=params.bins)
 
-    fit(params.max_epoch, model, MNLoss, opt[0], train_dl, valid_dl, opt[1])
+    min_loss = fit(params.max_epoch, model, MNLoss, opt[0], train_dl, valid_dl, opt[1])
 
     writer.flush()
     writer.close()
 
-    update_tracking(run_id, "total_loss", MNLoss.metrics["total_loss"].cpu().detach().numpy())
-    update_tracking(run_id, "pred_loss", MNLoss.metrics["pred_loss"].cpu().detach().numpy())
-    update_tracking(run_id, "c_loss", MNLoss.metrics["c_loss"].cpu().detach().numpy())
-    update_tracking(run_id, "Accuracy", MNLoss.metrics["acc"].cpu().detach().numpy())
-    update_tracking(run_id, "ended_time", "{:%m%d_%H%M}".format(datetime.now()))
+    update_tracking(id=run_id, data=detach_dict(MNLoss.metrics),
+                    csv_file=Path(MODEL_LOG_PATH, "tracking.csv"))
+    update_tracking(id=run_id, data={"min_loss": min_loss.cpu().detach().numpy(), "end_time": "{:%m%d_%H%M}".format(datetime.now())},
+                    csv_file=Path(MODEL_LOG_PATH, "tracking.csv"))

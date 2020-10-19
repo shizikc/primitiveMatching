@@ -1,6 +1,7 @@
 import logging
 from argparse import ArgumentParser
 import pandas as pd
+import torch
 
 
 def get_args():
@@ -17,9 +18,9 @@ def get_args():
                         # default='C:\\Users\\sharon\\Documents\\Research\\data\\dataset2019\\shapenet\\val\\gt\\02691156\\')
                         default='/home/coopers/data/val/gt/02691156/')
     parser.add_argument('--max_epoch', type=int, default=300, help='Epoch to run [default: 100]')
-    parser.add_argument('--bins', type=int, default=32, help='resolution of main cube [default: 10]')
+    parser.add_argument('--bins', type=int, default=10, help='resolution of main cube [default: 10]')
     parser.add_argument('--samples_per_face', type=int, default=100, help='number of samples per voxel [default: 20]')
-    parser.add_argument('--batch_size', type=int, default=16, help='Batch Size during training [default: 1]')
+    parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 1]')
     parser.add_argument('--threshold', default=0.5, help='cube probability threshold')
     parser.add_argument('--optimizer', default="sgd", help='should be either adam or SGD [default: sgd]')
     parser.add_argument('--lr', default=0.1, type=float, help='optimizer learning rate')
@@ -37,9 +38,8 @@ def get_args():
 
 
 def update_tracking(
-        id, field, value, csv_file="./tracking.csv",
-        integer=False, digits=None, nround=6,
-        drop_broken_runs=False, field_mark_done="finish_time"):
+        id, data=None, csv_file="./tracking.csv", nround=6,
+        drop_broken_runs=False, field_mark_done="end_time"):
     """
     Tracking function for keep track of model parameters and
     CV scores. `integer` forces the value to be an int.
@@ -53,10 +53,18 @@ def update_tracking(
             df = df.dropna(subset=[field_mark_done])
         except KeyError:
             logging.warning("No loss column found in tracking file")
-    if integer:
-        value = round(value)
-    elif digits is not None:
-        value = round(value, digits)
-    df.loc[id, field] = value  # Model number is index
-    df = df.round(nround)
+    if id in df.index:
+        # append dictionary to existing row
+        for field, value in data.items():
+            df.loc[id, field] = value
+    else:
+        df = df.append(pd.DataFrame(data=data, index=[id]))
     df.to_csv(csv_file)
+
+
+def detach_dict(d):
+    state_dict = {}
+    for k, v in d.items():
+        if isinstance(v, torch.Tensor):
+            state_dict[k] = v.cpu().detach().numpy()
+    return state_dict

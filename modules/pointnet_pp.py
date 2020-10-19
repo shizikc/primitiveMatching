@@ -7,7 +7,7 @@ from modules.pointnet import STNkd, STN3d
 
 
 class pointNetPP(nn.Module):
-    def __init__(self, k=40, normal_channel=True):
+    def __init__(self, k=40, normal_channel=False):
         super(pointNetPP, self).__init__()
         if normal_channel:
             channel = 6
@@ -33,8 +33,8 @@ class pointNetPP(nn.Module):
         x = F.relu(self.bn1(self.fc1(x)))
         x = F.relu(self.bn2(self.dropout(self.fc2(x))))
         x = self.fc3(x)
-        x = F.log_softmax(x, dim=1)
-        return x, trans_feat
+        x = torch.sigmoid(x)
+        return x
 
 
 class PointNetEncoder(nn.Module):

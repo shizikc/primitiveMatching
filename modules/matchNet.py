@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from modules.cuboid import sample_cudoid, rotate_cuboid, get_cuboid_corner
 from modules.pointnet import PointNetCls
+from modules.pointnet_pp import pointNetPP
 
 
 class MatchNet(nn.Module):
@@ -10,6 +11,7 @@ class MatchNet(nn.Module):
         super(MatchNet, self).__init__()
         self.bins = bins  # per face partition
         self.encoderBlock1 = PointNetCls(self.bins ** 3)
+        # self.encoderBlock1 = pointNetPP(self.bins ** 3)
 
         self.samplesPerFace = samplesPerFace
         self.dev = dev
@@ -28,6 +30,7 @@ class MatchNet(nn.Module):
         # samples = self.samples.repeat(bs, 1, 1, 1)
 
         p = self.encoderBlock1(x)  # bs x bins**3
+
         # z, q, t, p = torch.split_with_sizes(x,
         #                                     tuple(torch.tensor([3, 4, 3, 1]) * (self.bins ** 3)), axis=1)
         #

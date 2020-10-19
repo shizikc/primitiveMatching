@@ -70,17 +70,17 @@ class MatchNetLoss(nn.Module):
 
         if train_reg:
             # TODO: replace loop
-            CD = 0.
+            CD = torch.tensor(0.)
             for i in range(bs):
                 pred_i = self.centers[mask[i].bool(), :]  # torch.Size([nPositiveBins, 3])
                 # any points detected
                 if pred_i.shape[0] > 0:
-                    CD += chamfer_distance(pred_i.unsqueeze(0), diff_gt[i].unsqueeze(0))
+                    CD = CD + chamfer_distance(pred_i.unsqueeze(0), diff_gt[i].unsqueeze(0))
             c_loss = CD.true_divide(bs)
         else:
             c_loss = torch.tensor(0.)
 
-        total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss + self.fn_coeff * torch.exp(-tp)
+        total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss #+ self.fn_coeff * torch.exp(-tp)
 
         self.metrics['epoch'] = self.iter
         self.metrics['total_loss'] += total_loss
