@@ -84,7 +84,7 @@ class MatchNetLoss(nn.Module):
 
         self.metrics['epoch'] = self.iter
         self.metrics['total_loss'] += total_loss
-        self.metrics['pred_loss_1'] += pred_loss_1
+        self.metrics['pred_loss'] += pred_loss_1
         self.metrics['c_loss'] += c_loss
         self.metrics['acc'] += acc
         self.metrics['precision'] += precision
