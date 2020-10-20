@@ -83,8 +83,8 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
         model.train()
         loss_obj.reset_loss()
 
-        for x_part, diff_gt, p_gt in train_dl:
-            loss_batch(model, loss_obj.loss_func, diff_gt, (x_part, p_gt), opt)
+        for x_part, diff_gt, p1_gt, p2_gt in train_dl:
+            loss_batch(model, loss_obj.loss_func, diff_gt, (x_part, p1_gt, p2_gt), opt)
 
         loss_obj.end_epoch(len(train_dl))
 
@@ -106,8 +106,8 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
         model.eval()
         loss_obj.reset_loss()
         with torch.no_grad():
-            for i, (x_part_v, diff_gt_v, p_gt_v) in enumerate(valid_dl):
-                loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p_gt_v))
+            for i, (x_part_v, diff_gt_v, p1_gt_v, p2_gt_v) in enumerate(valid_dl):
+                loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p1_gt_v, p2_gt_v))
             loss_obj.end_epoch(i + 1)
 
             logging.info(

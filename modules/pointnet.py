@@ -187,9 +187,6 @@ class PointNetCls(nn.Module):
         self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
 
         self.fc1 = nn.Linear(1024, 512)
-        # self.fc2 = nn.Linear(512, 256)
-        # self.fc3 = nn.Linear(256, k)
-
         self.fc2 = nn.Linear(512, 512)
         self.fc3 = nn.Linear(512, k, bias=True)
 
@@ -204,7 +201,7 @@ class PointNetCls(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = x.transpose(2, 1)
+        x = x.transpose(2, 1) # bs x 3 x nPoints
 
         x, _, _ = self.feat(x)  # torch.Size([bs, 1024])
         if x.shape[0] > 1:

@@ -113,10 +113,12 @@ class ShapeDiffDataset(Dataset):
         x_partial, x_diff = create_partial_from_complete(x_complete,
                                                             partial_size=self.partial_size,
                                                             rng=self.rng)
-        H, edges = create_hist_labels(x_diff, self.bins)
+        H1, _ = create_hist_labels(x_diff, self.bins)
+        H2, _ = create_hist_labels(x_diff, 4*self.bins)
 
         return torch.tensor(x_partial).to(self.dev).float(), torch.tensor(x_diff).to(self.dev).float(),\
-               torch.tensor(H > 0.0).flatten().to(self.dev).float()
+               torch.tensor(H1 > 0.0).flatten().to(self.dev).float(), \
+               torch.tensor(H2 > 0.0).flatten().to(self.dev).float()
 
 
 #
@@ -125,10 +127,10 @@ if __name__ == '__main__':
     # train_path = '/home/yonatan/data/oc3d/chair/train/gt/03001627'
 
     shapenet = ShapeDiffDataset(train_path,
-                                bins=5,
+                                bins=10,
                                 dev='cpu',
                                 partial_size=256,
                                 seed=42
                                 )
-    x_partial, x_diff, hist = shapenet[0]
+    x_partial, x_diff, hist1, hist2 = shapenet[0]
     # plot_pc_mayavi([x_partial, x_diff], colors=((1., 1., 1.), (1., 0., 0.)))
