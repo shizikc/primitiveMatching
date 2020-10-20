@@ -215,8 +215,8 @@ class PointNetCls(nn.Module):
             print(x.shape)
             x = F.relu(self.in1(x))
             x = F.relu(self.in2(self.dropout(self.fc2(x))))
-        x = torch.sigmoid(self.fc3(x))
-        return x
+        x = F.relu(self.fc3(x))
+        return x, torch.sigmoid(x)
         # return F.log_softmax(x, dim=1)
 
 
@@ -250,8 +250,6 @@ class PointNetDenseCls(nn.Module):
             x = F.relu(self.in2(self.conv2(x)))  # torch.Size([bs, 256, num_points])
             x = F.relu(self.in3(self.conv3(x)))  # torch.Size([bs, 128, num_points])
         x = self.conv4(x)  # torch.Size([bs, k, points])
-        # x = x.transpose(2, 1).contiguous()  # torch.Size([bs, num_points, k])
-        # x = x.contiguous()  # torch.Size([bs, k, points])
 
         return x
 
@@ -269,12 +267,11 @@ def feature_transform_regularizer(trans):
 if __name__ == '__main__':
     sim_data = Variable(torch.rand(2, 2500, 3))
     trans = STN3d()
-    #
 
     cls = PointNetCls(k=100)
     out = cls(sim_data)
     print('class', out.size())  # torch.Size([bs, k]).
 
-    seg = PointNetDenseCls(k=50)
-    out = seg(sim_data)
-    print('seg', out.size())  # torch.Size([bs, k, num_points])
+    # seg = PointNetDenseCls(k=50)
+    # out = seg(sim_data)
+    # print('seg', out.size())  # torch.Size([bs, k, num_points])

@@ -58,7 +58,7 @@ class MatchNetLoss(nn.Module):
         train_reg = self.iter >= self.reg_start_iter
 
         # entroy loss
-        pred_loss = self.bce_loss(probs_pred, prob_target)
+        pred_loss_1 = self.bce_loss(probs_pred, prob_target)
 
         mask = (probs_pred > self.threshold).float()
 
@@ -80,11 +80,11 @@ class MatchNetLoss(nn.Module):
         else:
             c_loss = torch.tensor(0.)
 
-        total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss #+ self.fn_coeff * torch.exp(-tp)
+        total_loss = self.bce_coeff * pred_loss_1 + self.cd_coeff * c_loss #+ self.fn_coeff * torch.exp(-tp)
 
         self.metrics['epoch'] = self.iter
         self.metrics['total_loss'] += total_loss
-        self.metrics['pred_loss'] += pred_loss
+        self.metrics['pred_loss_1'] += pred_loss_1
         self.metrics['c_loss'] += c_loss
         self.metrics['acc'] += acc
         self.metrics['precision'] += precision

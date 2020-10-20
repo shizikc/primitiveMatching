@@ -73,7 +73,7 @@ def get_model():
     lr_scheduler = torch.optim.lr_scheduler.StepLR(opt,
                                                    step_size=params.step_size,
                                                    gamma=params.gamma)
-    return model.to(dev), (opt, lr_scheduler)
+    return model.to(dev), opt, lr_scheduler
 
 
 def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
@@ -138,18 +138,19 @@ if __name__ == '__main__':
 
     train_dl, valid_dl = get_data()
 
-    model, opt = get_model()
+    model, opt, opt_rl = get_model()
 
     MNLoss = MatchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
                           bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff,
                           fn_coeff=params.fn_coeff, bins=params.bins)
 
-    min_loss = fit(params.max_epoch, model, MNLoss, opt[0], train_dl, valid_dl, opt[1])
+    min_loss = fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl, opt_rl)
 
     writer.flush()
     writer.close()
 
     update_tracking(id=run_id, data=detach_dict(MNLoss.metrics),
                     csv_file=Path(MODEL_LOG_PATH, "tracking.csv"))
-    update_tracking(id=run_id, data={"min_loss": min_loss.cpu().detach().numpy(), "end_time": "{:%m%d_%H%M}".format(datetime.now())},
+    update_tracking(id=run_id, data={"min_loss": min_loss.cpu().detach().numpy(),
+                                     "end_time": "{:%m%d_%H%M}".format(datetime.now())},
                     csv_file=Path(MODEL_LOG_PATH, "tracking.csv"))
