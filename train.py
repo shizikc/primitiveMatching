@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -143,8 +144,12 @@ if __name__ == '__main__':
     MNLoss = MatchNetLoss(threshold=params.threshold, reg_start_iter=params.reg_start_iter,
                           bce_coeff=params.bce_coeff, cd_coeff=params.cd_coeff,
                           fn_coeff=params.fn_coeff, bins=params.bins)
-
-    min_loss = fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl, opt_rl)
+    try:
+        min_loss = fit(params.max_epoch, model, MNLoss, opt, train_dl, valid_dl, opt_rl)
+    except Exception as e:
+        logging.error(e)
+        # remove updates folder
+        shutil.rmtree(MODEL_LOG_PATH)
 
     writer.flush()
     writer.close()
