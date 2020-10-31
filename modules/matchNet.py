@@ -11,9 +11,8 @@ class MatchNet(nn.Module):
     def __init__(self, bins, samplesPerFace, dev):
         super(MatchNet, self).__init__()
         self.bins = bins  # per face partition
-        self.layer1 = PointNetCls(self.bins ** 3)
-        # self.layer1 = pointNetPP(self.bins ** 3)
-        self.layer2 = ResBlock(self.bins ** 3)
+        self.encoderBlock1 = PointNetCls(self.bins ** 3)
+        # self.encoderBlock1 = pointNetPP(self.bins ** 3)
 
         self.samplesPerFace = samplesPerFace
         self.dev = dev
@@ -26,13 +25,12 @@ class MatchNet(nn.Module):
         :param x: in torch.Size(bs, nPoints, 3)
         :return: pred in (bs, nCuboid, 3*nSamplePerFace, 3)
         """
-        # bs = x.shape[0]
+        bs = x.shape[0]
 
         # uniformly sampled cuboids in [-1,1], shape torch.Size([bs, bins**3, nSamples, 3])
         # samples = self.samples.repeat(bs, 1, 1, 1)
 
-        x, p1 = self.layer1(x)  # bs x bins**3, bs x bins**3 in [0,1]
-        x2, p2 = self.layer2(x.unsqueeze(1))  # bs x 16 * bins**3, bs x bins**3 in [0,1]
+        p = self.encoderBlock1(x)  # bs x bins**3
 
         # z, q, t, p = torch.split_with_sizes(x,
         #                                     tuple(torch.tensor([3, 4, 3, 1]) * (self.bins ** 3)), axis=1)
@@ -58,7 +56,7 @@ class MatchNet(nn.Module):
         #     # translate by t, scale by z
         #     out = out * z + t
         #     return out, p, z
-        return None, p1, p2
+        return None, p, None
 
 
 if __name__ == '__main__':

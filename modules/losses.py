@@ -46,12 +46,10 @@ class MatchNetLoss(nn.Module):
         :return:
         """
         diff_gt = gt[0]  # bs x 256 x  3
-        prob_target1 = gt[1]
-        prob_target2 = gt[2]
+        prob_target = gt[1]
 
         diff_pred = pred[0]  # bs x bins^3 x nSaples x 3
-        probs_pred_layer1 = pred[1]  # bs x bins^3
-        probs_pred_layer2 = pred[2]  # bs x bins^3
+        probs_pred = pred[1]  # bs x bins^3
 
         dev = diff_gt.device
         self.centers = self.centers.to(dev)
@@ -60,17 +58,16 @@ class MatchNetLoss(nn.Module):
 
         train_reg = self.iter >= self.reg_start_iter
 
-        # Entropy loss
-        pred_loss_1 = self.bce_loss(probs_pred_layer1, prob_target1)
-        pred_loss_2 = self.bce_loss(probs_pred_layer2, prob_target2)
+        # entroy loss
+        pred_loss = self.bce_loss(probs_pred, prob_target)
 
-        mask = (probs_pred_layer2 > self.threshold).float()
+        mask = (probs_pred > self.threshold).float()
 
-        acc = (mask == prob_target2).float().mean()
-        fn = ((mask != prob_target2).float() * (prob_target2 == 1).float()).mean()
-        tp = ((mask == prob_target2) * (mask == 1)).float().sum()
+        acc = (mask == prob_target).float().mean()
+        fn = ((mask != prob_target).float() * (prob_target == 1).float()).mean()
+        tp = ((mask == prob_target) * (mask == 1)).float().sum()
         precision = tp.true_divide((mask == 1).sum())
-        recall = tp.true_divide((prob_target2 == 1).sum())
+        recall = tp.true_divide((prob_target == 1).sum())
 
         if train_reg:
             # TODO: replace loop
@@ -84,11 +81,11 @@ class MatchNetLoss(nn.Module):
         else:
             c_loss = torch.tensor(0.)
 
-        total_loss = self.bce_coeff * pred_loss_1 + self.bce_coeff * pred_loss_2 + self.cd_coeff * c_loss #+ self.fn_coeff * torch.exp(-tp)
+        total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss #+ self.fn_coeff * torch.exp(-tp)
 
         self.metrics['epoch'] = self.iter
         self.metrics['total_loss'] += total_loss
-        self.metrics['pred_loss'] += pred_loss_1
+        self.metrics['pred_loss'] += pred_loss
         self.metrics['c_loss'] += c_loss
         self.metrics['acc'] += acc
         self.metrics['precision'] += precision

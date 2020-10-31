@@ -32,7 +32,7 @@ def get_args():
     parser.add_argument('--cd_coeff', type=float, default=1.)
     parser.add_argument('--fn_coeff', type=float, default=1.)
     parser.add_argument('--bce_coeff', type=float, default=1.)
-    parser.add_argument('--reg_start_iter', type=int, default=15000)
+    parser.add_argument('--reg_start_iter', type=int, default=150)
 
     return parser.parse_args()
 
