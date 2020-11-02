@@ -104,23 +104,23 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
         writer.add_scalar("Precision (Train)", loss_obj.metrics["precision"], epoch)
         writer.add_scalar("Recall (Train)", loss_obj.metrics["recall"], epoch)
 
-        model.eval()
-        loss_obj.reset_loss()
-        with torch.no_grad():
-            for i, (x_part_v, diff_gt_v, p1_gt_v, p2_gt_v) in enumerate(valid_dl):
-                loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p1_gt_v, p2_gt_v))
-            loss_obj.end_epoch(i + 1)
-
-            logging.info(
-                "Epoch (Valid): %(epoch).1f, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
-                " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f, "
-                "Precision : %(precision).4f,  Recall : %(recall).4f" % loss_obj.metrics)
-
-            writer.add_scalar("Loss (Validation)", loss_obj.metrics["total_loss"], epoch)
-            writer.add_scalar("Accuracy (Validation)", loss_obj.metrics["acc"], epoch)
-            writer.add_scalar("False Negative (Validation)", loss_obj.metrics["fn"], epoch)
-            writer.add_scalar("Precision (Validation)", loss_obj.metrics["precision"], epoch)
-            writer.add_scalar("Recall (Validation)", loss_obj.metrics["recall"], epoch)
+        # model.eval()
+        # loss_obj.reset_loss()
+        # with torch.no_grad():
+        #     for i, (x_part_v, diff_gt_v, p1_gt_v, p2_gt_v) in enumerate(valid_dl):
+        #         loss_batch(model, loss_obj.loss_func, x_part_v, (diff_gt_v, p1_gt_v, p2_gt_v))
+        #     loss_obj.end_epoch(i + 1)
+        #
+        #     logging.info(
+        #         "Epoch (Valid): %(epoch).1f, total loss : %(total_loss)5.4f, pred_loss: %(pred_loss).4f,"
+        #         " c_loss: %(c_loss).3f accuracy : %(acc).4f, False negative : %(fn).4f, "
+        #         "Precision : %(precision).4f,  Recall : %(recall).4f" % loss_obj.metrics)
+        #
+        #     writer.add_scalar("Loss (Validation)", loss_obj.metrics["total_loss"], epoch)
+        #     writer.add_scalar("Accuracy (Validation)", loss_obj.metrics["acc"], epoch)
+        #     writer.add_scalar("False Negative (Validation)", loss_obj.metrics["fn"], epoch)
+        #     writer.add_scalar("Precision (Validation)", loss_obj.metrics["precision"], epoch)
+        #     writer.add_scalar("Recall (Validation)", loss_obj.metrics["recall"], epoch)
 
         # TODO: when turning validation - replace minimum loss with val_loss
         if epoch == 0:  # params.reg_start_iter:

@@ -81,7 +81,7 @@ class MatchNetLoss(nn.Module):
         else:
             c_loss = torch.tensor(0.)
 
-        total_loss = self.bce_coeff * pred_loss + self.cd_coeff * c_loss #+ self.fn_coeff * torch.exp(-tp)
+        total_loss = self.bce_coeff * pred_loss # + self.cd_coeff * c_loss #+ self.fn_coeff * torch.exp(-tp)
 
         self.metrics['epoch'] = self.iter
         self.metrics['total_loss'] += total_loss
