@@ -10,7 +10,7 @@ from utils.visualization import plot_pc_mayavi
 params = get_args()
 dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-model_path = "C:\\Users\\sharon\\Documents\\Research\\models\\model_1011_1134.pt"
+model_path = "//home//coopers//models//1102_0949//model"
 model, _ = get_model()
 model.load_state_dict(torch.load(model_path, map_location=dev))
 model.eval()

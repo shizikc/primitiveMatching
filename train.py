@@ -126,7 +126,7 @@ def fit(epochs, model, loss_obj, opt, train_dl, valid_dl, lr_opt=None):
         if epoch == 0:  # params.reg_start_iter:
             min_loss = loss_obj.metrics['total_loss']
 
-        if epoch >= params.reg_start_iter and loss_obj.metrics['total_loss'] <= min_loss:
+        if loss_obj.metrics['total_loss'] <= min_loss:  # epoch >= params.reg_start_iter and
             min_loss = loss_obj.metrics['total_loss']
 
             # save best model
